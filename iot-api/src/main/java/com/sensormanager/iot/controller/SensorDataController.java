@@ -5,6 +5,9 @@ import com.sensormanager.iot.service.SensorDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.format.annotation.DateTimeFormat;
+import java.time.LocalDateTime;
+import org.springframework.http.HttpStatus;
 
 import java.util.List;
 
@@ -52,5 +55,24 @@ public class SensorDataController {
     public ResponseEntity<Void> deleteSensorData(@PathVariable Long id) {
         sensorDataService.deleteSensorData(id);
         return ResponseEntity.noContent().build();
+    }
+
+    //asdasd
+    @GetMapping("/query")
+    public ResponseEntity<List<SensorDataDTO>> querySensorData(
+            @RequestHeader(value = "Authorization", required = false) String headerApiKey,
+            @RequestParam(value = "company_api_key", required = false) String paramApiKey,
+            @RequestParam("from") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam("to") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
+            @RequestParam("sensor_id") List<Long> sensorIds) {
+
+        String apiKey = headerApiKey != null ? headerApiKey : paramApiKey;
+
+        if (apiKey == null || !apiKey.equals("TU_API_KEY_SEGURA")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        List<SensorDataDTO> data = sensorDataService.getSensorDataBySensorIdsAndDateRange(sensorIds, from, to);
+        return ResponseEntity.ok(data);
     }
 }
