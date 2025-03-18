@@ -1,6 +1,6 @@
 package com.sensormanager.iot.service;
 
-import com.sensormanager.iot.adapter.SensorDataAdapter;
+import com.sensormanager.iot.adapter.SensorDataDataAdapter;
 import com.sensormanager.iot.dto.SensorDataDTO;
 import com.sensormanager.iot.model.SensorData;
 import com.sensormanager.iot.repository.SensorDataRepository;
@@ -22,20 +22,20 @@ public class SensorDataService {
 
     public List<SensorDataDTO> getAllSensorData() {
         return sensorDataRepository.findAll().stream()
-                .map(SensorDataAdapter::toDTO)
+                .map(SensorDataDataAdapter::toDTO)
                 .collect(Collectors.toList());
     }
 
     public SensorDataDTO getSensorDataById(Long id) {
         return sensorDataRepository.findById(id)
-                .map(SensorDataAdapter::toDTO)
+                .map(SensorDataDataAdapter::toDTO)
                 .orElse(null);
     }
 
     public SensorDataDTO createSensorData(SensorDataDTO sensorDataDTO) {
-        SensorData sensorData = SensorDataAdapter.toEntity(sensorDataDTO);
+        SensorData sensorData = SensorDataDataAdapter.toEntity(sensorDataDTO);
         SensorData savedSensorData = sensorDataRepository.save(sensorData);
-        return SensorDataAdapter.toDTO(savedSensorData);
+        return SensorDataDataAdapter.toDTO(savedSensorData);
     }
 
     public SensorDataDTO updateSensorData(Long id, SensorDataDTO sensorDataDTO) {
@@ -43,7 +43,7 @@ public class SensorDataService {
             existingSensor.setValue(sensorDataDTO.getValue());
             existingSensor.setTimestamp(sensorDataDTO.getTimestamp());
             SensorData updatedSensor = sensorDataRepository.save(existingSensor);
-            return SensorDataAdapter.toDTO(updatedSensor);
+            return SensorDataDataAdapter.toDTO(updatedSensor);
         }).orElse(null);
     }
 
