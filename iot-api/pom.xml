@@ -48,12 +48,6 @@
 		    <version>2.1.1</version>
 		</dependency>
 		<dependency>
-		    <groupId>org.projectlombok</groupId>
-		    <artifactId>lombok</artifactId>
-		    <version>1.18.26</version>
-		    <scope>provided</scope>
-		</dependency>
-		<dependency>
 		    <groupId>org.eclipse.paho</groupId>
 		    <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
 		    <version>1.2.5</version>
@@ -102,6 +96,7 @@
 						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
+							<version>${lombok.version}</version>
 						</path>
 					</annotationProcessorPaths>
 				</configuration>
