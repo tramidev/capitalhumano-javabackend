@@ -7,6 +7,7 @@ import com.sensormanager.iot.repository.SensorDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,5 +50,22 @@ public class SensorDataService {
 
     public void deleteSensorData(Long id) {
         sensorDataRepository.deleteById(id);
+    }
+
+    public List<SensorDataDTO> getSensorDataBySensorIdsAndDateRange(List<Long> sensorIds, LocalDateTime from, LocalDateTime to) {
+        return sensorDataRepository.findAll().stream()
+            .filter(sd -> sensorIds.contains(sd.getSensorId()) &&
+                          !sd.getTimestamp().isBefore(from) &&
+                          !sd.getTimestamp().isAfter(to))
+            .map(SensorDataAdapter::toDTO)
+            .collect(Collectors.toList());
+    }
+
+    // Inserción múltiple solicitada por la actividad
+    public void saveAll(List<SensorDataDTO> sensorDataDTOList){
+        List<SensorData> entities = sensorDataDTOList.stream()
+            .map(SensorDataAdapter::toEntity)
+            .collect(Collectors.toList());
+        sensorDataRepository.saveAll(entities);
     }
 }
