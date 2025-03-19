@@ -67,17 +67,36 @@ public class LocationServiceImp implements LocationService {
             return new LocationDTO();
         }
 
-        locationToUpdate.setLocationName(locationDTO.getLocationName() != null ? locationDTO.getLocationName() : locationToUpdate.getLocationName());
-        locationToUpdate.setLocationCity(locationDTO.getLocationCity());
-        locationToUpdate.setLocationCountry(locationDTO.getLocationCountry());
-        locationToUpdate.setLocationStreet(locationDTO.getLocationStreet());
-        locationToUpdate.setLocationNumber(locationDTO.getLocationNumber());
-        locationToUpdate.setLocationStatus(locationDTO.getLocationStatus());
+        locationToUpdate.setLocationName(
+                locationDTO.getLocationName() != null ? locationDTO.getLocationName() : locationToUpdate.getLocationName()
+        );
+
+        locationToUpdate.setLocationCity(
+                locationDTO.getLocationCity() != null ? locationDTO.getLocationCity() : locationToUpdate.getLocationCity()
+        );
+
+        locationToUpdate.setLocationCountry(
+                locationDTO.getLocationCountry() != null ? locationDTO.getLocationCountry() : locationToUpdate.getLocationCountry()
+        );
+
+        locationToUpdate.setLocationStreet(
+                locationDTO.getLocationStreet() != null ? locationDTO.getLocationStreet() : locationToUpdate.getLocationStreet()
+        );
+
+        locationToUpdate.setLocationNumber(
+                locationDTO.getLocationNumber() != null ? locationDTO.getLocationNumber() : locationToUpdate.getLocationNumber()
+        );
+
+        locationToUpdate.setLocationStatus(
+                locationDTO.getLocationStatus() != null ? locationDTO.getLocationStatus() : locationToUpdate.getLocationStatus()
+        );
 
         Location locationUpdated = locationRepository.save(locationToUpdate);
+
         if (locationUpdated == null) {
             return new LocationDTO();
         }
+
         return LocationDataAdapter.toDTO(locationUpdated);
     }
 
