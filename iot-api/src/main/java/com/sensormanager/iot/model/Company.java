@@ -1,6 +1,7 @@
 package com.sensormanager.iot.model;
 
 import java.time.Instant;
+import java.util.List;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -34,4 +35,7 @@ public class Company {
     protected void onCreate() {
         this.companyCreatedAt = Instant.now().getEpochSecond();
     }
+	
+	 @OneToMany(mappedBy = "company", fetch = FetchType.LAZY)
+	 private List<Location> locations;
 }
