@@ -15,14 +15,13 @@ public class CompanyDataAdapter {
         );
     }
 
-    public static Company toEntity(CompanyDTO CompanyDTO) {
-    	
-        return new Company(
-        	CompanyDTO.getId(),
-        	CompanyDTO.getCompanyApiKey(),
-        	CompanyDTO.getCompanyName(),
-        	CompanyDTO.getCompanyStatus(),
-        	CompanyDTO.getCompanyCreatedAt()
-        );
+    public static Company toEntity(CompanyDTO companyDTO) {
+    	return Company.builder()
+                .id(companyDTO.getId())
+                .companyApiKey(companyDTO.getCompanyApiKey())
+                .companyName(companyDTO.getCompanyName())
+                .companyStatus(companyDTO.getCompanyStatus())
+                .companyCreatedAt(companyDTO.getCompanyCreatedAt())
+                .build();
     }
 }

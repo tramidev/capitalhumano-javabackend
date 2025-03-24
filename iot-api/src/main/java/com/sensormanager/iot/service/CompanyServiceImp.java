@@ -61,7 +61,7 @@ public class CompanyServiceImp implements CompanyService {
             return new CompanyDTO();
         }
 		companyWillUpdated.setCompanyName(companyDto.getCompanyName() != null && companyDto.getCompanyName().length() > 0 ? companyDto.getCompanyName() : companyWillUpdated.getCompanyName());
-		companyWillUpdated.setCompanyStatus(companyDto.getCompanyStatus());
+		companyWillUpdated.setCompanyStatus(companyDto.getCompanyStatus() != null ? companyDto.getCompanyStatus() : companyWillUpdated.getCompanyStatus());
         Company companyUpdated = companyRepository.save(companyWillUpdated);
         if (companyUpdated == null) {
             return new CompanyDTO();
@@ -76,6 +76,11 @@ public class CompanyServiceImp implements CompanyService {
             return new CompanyDTO();
         }
         companyWillDeleted.setCompanyStatus(false);
+       
+        if (companyWillDeleted.getLocations() != null) {
+        	companyWillDeleted.getLocations().forEach(location -> location.setLocationStatus(false));
+        }
+        
         Company companyDeleted= companyRepository.save(companyWillDeleted);
         if (companyDeleted == null) {
             return new CompanyDTO();
