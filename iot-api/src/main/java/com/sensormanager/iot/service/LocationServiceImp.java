@@ -37,11 +37,12 @@ public class LocationServiceImp implements LocationService {
     @Override
     public LocationDTO findById(Long id) {
         Location location = locationRepository.findByIdAndLocationStatusTrue(id).orElse(null);
-        if (location == null || location.getId() == null) {
-            return new LocationDTO();
+        if (location == null) {
+            return null; // devuelve null en vez de un DTO vacío
         }
         return LocationDataAdapter.toDTO(location);
     }
+
 
     @Override
     public LocationDTO create (LocationDTO locationDTO) {
