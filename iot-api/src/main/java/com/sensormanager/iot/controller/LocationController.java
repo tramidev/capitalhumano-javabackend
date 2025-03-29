@@ -28,11 +28,12 @@ public class LocationController {
     @GetMapping("/{id}")
     public ResponseEntity<LocationDTO> findById(@PathVariable Long id) {
         LocationDTO locationDto = locationService.findById(id);
-        if (locationDto.getId() == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND.value()).body(locationDto);
+        if (locationDto == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); //respuesta 404 sin body
         }
-        return ResponseEntity.status(HttpStatus.OK.value()).body(locationDto);
+        return ResponseEntity.status(HttpStatus.OK).body(locationDto);
     }
+
 
     @PostMapping
     public ResponseEntity<LocationDTO> create(@RequestBody LocationDTO locationDto) {

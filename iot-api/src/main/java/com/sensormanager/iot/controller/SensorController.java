@@ -14,11 +14,11 @@ import java.util.List;
 public class SensorController {
 
 	@Autowired
-    private SensorService SensorService;
+    private SensorService sensorService;
 	
 	@GetMapping
 	public ResponseEntity<List<SensorDTO>> findAll(){
-		List<SensorDTO> SensorsDto = SensorService.findAll();
+		List<SensorDTO> SensorsDto = sensorService.findAll();
 		if(SensorsDto.isEmpty()){
 			return ResponseEntity.status(HttpStatus.NO_CONTENT.value()).body(SensorsDto);
 		}
@@ -26,17 +26,19 @@ public class SensorController {
 	}
 
 	@GetMapping("/{id}")
-	public ResponseEntity<SensorDTO> findById(@PathVariable Long id){
-		SensorDTO SensorsDto = SensorService.findById(id);
-		if(SensorsDto.getId() == null){
-			return ResponseEntity.status(HttpStatus.NOT_FOUND.value()).body(SensorsDto);
+	public ResponseEntity<SensorDTO> findById(@PathVariable Long id) {
+		SensorDTO sensorDto = sensorService.findById(id);
+		if (sensorDto == null) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 		}
-		return ResponseEntity.status(HttpStatus.OK.value()).body(SensorsDto);
+		return ResponseEntity.ok(sensorDto);
 	}
+
+
 
 	@GetMapping("/company/{id}")
 	public ResponseEntity<List<SensorDTO>> findByCompanyId(@PathVariable Long id){
-		List<SensorDTO> SensorsDto = SensorService.findByCompany(id);
+		List<SensorDTO> SensorsDto = sensorService.findByCompany(id);
 		if(SensorsDto.isEmpty()){
 			return ResponseEntity.status(HttpStatus.NO_CONTENT.value()).body(SensorsDto);
 		}
@@ -45,7 +47,7 @@ public class SensorController {
 
 	    @PostMapping
 	    public ResponseEntity<SensorDTO> create(@RequestBody SensorDTO sensorDTO){
-			SensorDTO insertedSensor = SensorService.create(sensorDTO);
+			SensorDTO insertedSensor = sensorService.create(sensorDTO);
 	        if(insertedSensor.getId() == null){
 	            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(insertedSensor);
 	        }
@@ -54,7 +56,7 @@ public class SensorController {
 
 	    @PutMapping
 	    public ResponseEntity<SensorDTO> update(@RequestBody SensorDTO sensorDTO){
-			SensorDTO updatedSensor = SensorService.update(sensorDTO);
+			SensorDTO updatedSensor = sensorService.update(sensorDTO);
 	        if(updatedSensor.getId() == null){
 	            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(updatedSensor);
 	        }
@@ -63,7 +65,7 @@ public class SensorController {
 
 	    @DeleteMapping("/{id}")
 	    public ResponseEntity<SensorDTO> deleteById(@PathVariable Long id){
-			SensorDTO deletedSensor = SensorService.deleteById(id);
+			SensorDTO deletedSensor = sensorService.deleteById(id);
 	        if(deletedSensor.getId() == null){
 	            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(deletedSensor);
 	        }

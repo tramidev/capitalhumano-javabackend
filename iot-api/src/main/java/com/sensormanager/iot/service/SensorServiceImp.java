@@ -2,7 +2,9 @@ package com.sensormanager.iot.service;
 
 import com.sensormanager.iot.adapter.SensorDataAdapter;
 import com.sensormanager.iot.dto.SensorDTO;
+import com.sensormanager.iot.model.Company;
 import com.sensormanager.iot.model.Sensor;
+import com.sensormanager.iot.repository.CompanyRepository;
 import com.sensormanager.iot.repository.SensorRepository;
 import com.sensormanager.iot.utils.GenerateApiKey;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +19,11 @@ public class SensorServiceImp implements SensorService {
 
 	@Autowired
     private SensorRepository sensorRepository;
-	
-	@Override
+
+    @Autowired
+    private CompanyRepository companyRepository;
+
+    @Override
 	public List<SensorDTO> findAll() {
         List<Sensor> sensors = sensorRepository.findBySensorStatusTrue();
         if (sensors == null) {
@@ -27,22 +32,30 @@ public class SensorServiceImp implements SensorService {
         return sensors.stream().map(SensorDataAdapter::toDTO).collect(Collectors.toList());
     }
 
-	@Override
-	public SensorDTO findById(Long id) {
-        Sensor sensor = sensorRepository.findByIdAndSensorStatusTrue(id).orElse(new Sensor());
-        if (sensor == null || sensor.getId() == null) {
-            return new SensorDTO();
+    @Override
+    public SensorDTO findById(Long id) {
+        Sensor sensor = sensorRepository.findByIdAndSensorStatusTrue(id).orElse(null);
+        if (sensor == null) {
+            return null;
         }
         return SensorDataAdapter.toDTO(sensor);
-	}
+    }
 
     @Override
     public List<SensorDTO> findByCompany(Long id) {
-        List<Sensor> sensors = sensorRepository.findBySensorCompany(id);
-        if (sensors == null) {
-            return new ArrayList<SensorDTO>();
+        Company company = companyRepository.findById(id).orElse(null);
+        if (company == null) {
+            return new ArrayList<>();
         }
-        return sensors.stream().map(SensorDataAdapter::toDTO).collect(Collectors.toList());
+
+        List<Sensor> sensors = sensorRepository.findBySensorCompany(company);
+        if (sensors == null) {
+            return new ArrayList<>();
+        }
+
+        return sensors.stream()
+                .map(SensorDataAdapter::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override

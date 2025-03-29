@@ -4,8 +4,10 @@ import com.sensormanager.iot.adapter.LocationDataAdapter;
 import com.sensormanager.iot.dto.LocationDTO;
 import com.sensormanager.iot.model.Company;
 import com.sensormanager.iot.model.Location;
+import com.sensormanager.iot.model.Sensor;
 import com.sensormanager.iot.repository.CompanyRepository;
 import com.sensormanager.iot.repository.LocationRepository;
+import com.sensormanager.iot.repository.SensorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,14 +24,18 @@ public class LocationServiceImp implements LocationService {
     @Autowired
     private CompanyRepository companyRepository;
 
+    @Autowired
+    private SensorRepository sensorRepository;
+
+
     @Override
-    public List<LocationDTO> findAll(){
+    public List<LocationDTO> findAll() {
         List<Location> locations = locationRepository.findByLocationStatusTrue();
         if (locations == null) {
             return new ArrayList<>();
         }
 
-        return  locations.stream()
+        return locations.stream()
                 .map(LocationDataAdapter::toDTO)
                 .collect(Collectors.toList());
     }
@@ -37,14 +43,15 @@ public class LocationServiceImp implements LocationService {
     @Override
     public LocationDTO findById(Long id) {
         Location location = locationRepository.findByIdAndLocationStatusTrue(id).orElse(null);
-        if (location == null || location.getId() == null) {
-            return new LocationDTO();
+        if (location == null) {
+            return null; // devuelve null en vez de un DTO vacío
         }
         return LocationDataAdapter.toDTO(location);
     }
 
+
     @Override
-    public LocationDTO create (LocationDTO locationDTO) {
+    public LocationDTO create(LocationDTO locationDTO) {
         Company company = companyRepository.findById(locationDTO.getCompanyId()).orElse(null);
         if (company == null) {
             return new LocationDTO();
@@ -107,8 +114,17 @@ public class LocationServiceImp implements LocationService {
             return new LocationDTO();
         }
 
+        // Desactivar sensores asociados
+        List<Sensor> sensores = sensorRepository.findBySensorLocation(location);
+        for (Sensor sensor : sensores) {
+            sensor.setSensorStatus(false);
+            sensorRepository.save(sensor);
+        }
+
+        // Desactivar location
         location.setLocationStatus(false);
         Location locationDeleted = locationRepository.save(location);
+
         if (locationDeleted == null) {
             return new LocationDTO();
         }
@@ -116,3 +132,4 @@ public class LocationServiceImp implements LocationService {
         return LocationDataAdapter.toDTO(locationDeleted);
     }
 }
+
