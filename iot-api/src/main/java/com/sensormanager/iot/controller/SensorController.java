@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -29,7 +30,7 @@ public class SensorController {
 	public ResponseEntity<SensorDTO> findById(@PathVariable Long id) {
 		SensorDTO sensorDto = sensorService.findById(id);
 		if (sensorDto == null) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The sensor ID: " + id + " does not exist.");
 		}
 		return ResponseEntity.ok(sensorDto);
 	}
@@ -40,35 +41,36 @@ public class SensorController {
 	public ResponseEntity<List<SensorDTO>> findByCompanyId(@PathVariable Long id){
 		List<SensorDTO> SensorsDto = sensorService.findByCompany(id);
 		if(SensorsDto.isEmpty()){
-			return ResponseEntity.status(HttpStatus.NO_CONTENT.value()).body(SensorsDto);
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Company ID: " + id + "has no sensors.");
 		}
 		return ResponseEntity.status(HttpStatus.OK.value()).body(SensorsDto);
 	}
 
-	    @PostMapping
-	    public ResponseEntity<SensorDTO> create(@RequestBody SensorDTO sensorDTO){
-			SensorDTO insertedSensor = sensorService.create(sensorDTO);
-	        if(insertedSensor.getId() == null){
-	            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(insertedSensor);
-	        }
-	        return ResponseEntity.status(HttpStatus.OK.value()).body(insertedSensor);
-	    }
+    @PostMapping
+    public ResponseEntity<SensorDTO> create(@RequestBody SensorDTO sensorDTO){
+		SensorDTO insertedSensor = sensorService.create(sensorDTO);
+        if(insertedSensor.getId() == null){
+        	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The sensor was not inserted.");
+        }
+        return ResponseEntity.status(HttpStatus.OK.value()).body(insertedSensor);
+    }
 
-	    @PutMapping
-	    public ResponseEntity<SensorDTO> update(@RequestBody SensorDTO sensorDTO){
-			SensorDTO updatedSensor = sensorService.update(sensorDTO);
-	        if(updatedSensor.getId() == null){
-	            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(updatedSensor);
-	        }
-	        return ResponseEntity.status(HttpStatus.OK.value()).body(updatedSensor);
-	    }
+    @PutMapping
+    public ResponseEntity<SensorDTO> update(@RequestBody SensorDTO sensorDTO){
+		SensorDTO updatedSensor = sensorService.update(sensorDTO);
+        if(updatedSensor.getId() == null){
+        	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The sensor was not updated.");
+        }
+        return ResponseEntity.status(HttpStatus.OK.value()).body(updatedSensor);
+    }
 
-	    @DeleteMapping("/{id}")
-	    public ResponseEntity<SensorDTO> deleteById(@PathVariable Long id){
-			SensorDTO deletedSensor = sensorService.deleteById(id);
-	        if(deletedSensor.getId() == null){
-	            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(deletedSensor);
-	        }
-	        return ResponseEntity.status(HttpStatus.OK.value()).body(deletedSensor);
-	    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<SensorDTO> deleteById(@PathVariable Long id){
+		SensorDTO deletedSensor = sensorService.deleteById(id);
+        if(deletedSensor.getId() == null){
+        	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The sensor was not disabled.");
+        }
+        return ResponseEntity.status(HttpStatus.OK.value()).body(deletedSensor);
+    }
+    
 }

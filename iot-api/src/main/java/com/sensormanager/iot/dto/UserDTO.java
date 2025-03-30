@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Getter
 @Setter
@@ -24,14 +25,13 @@ public class UserDTO {
     @NotEmpty(message = "The username is required")
     private String username;
     @NotEmpty(message = "The password ir required")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
     @NotEmpty(message = "The email is required")
     private String userEmail;
     @NotNull(message = "This field is required")
     private Long userCreatedAt;
-    @NotNull(message = "This field is required")
     private Long userExpireAt;
-    @NotNull(message = "The user status is required")
     private Boolean userStatus;
     private Long companyId;
     private String companyName;

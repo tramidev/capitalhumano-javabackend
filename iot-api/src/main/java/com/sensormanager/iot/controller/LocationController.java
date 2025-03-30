@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -29,7 +30,7 @@ public class LocationController {
     public ResponseEntity<LocationDTO> findById(@PathVariable Long id) {
         LocationDTO locationDto = locationService.findById(id);
         if (locationDto == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); //respuesta 404 sin body
+        	throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The location ID: " + id + " does not exist.");
         }
         return ResponseEntity.status(HttpStatus.OK).body(locationDto);
     }
@@ -39,7 +40,7 @@ public class LocationController {
     public ResponseEntity<LocationDTO> create(@RequestBody LocationDTO locationDto) {
         LocationDTO locationInserted = locationService.create(locationDto);
         if (locationInserted.getId() == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(locationInserted);
+        	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The location was not inserted.");
         }
         return ResponseEntity.status(HttpStatus.OK.value()).body(locationInserted);
     }
@@ -48,7 +49,7 @@ public class LocationController {
     public ResponseEntity<LocationDTO> update(@RequestBody LocationDTO locationDto) {
         LocationDTO locationUpdated = locationService.update(locationDto);
         if (locationUpdated.getId() == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(locationUpdated);
+        	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The location was not updated.");
         }
         return ResponseEntity.status(HttpStatus.OK.value()).body(locationUpdated);
     }
@@ -57,7 +58,7 @@ public class LocationController {
     public ResponseEntity<LocationDTO> deleteById(@PathVariable Long id) {
         LocationDTO locationDeleted = locationService.deleteById(id);
         if (locationDeleted.getId() == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(locationDeleted);
+        	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The location was not disabled.");
         }
         return ResponseEntity.status(HttpStatus.OK.value()).body(locationDeleted);
     }

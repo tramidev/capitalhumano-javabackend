@@ -16,6 +16,18 @@ create table public.roles (
 	constraint role_pkey primary key (id)
 );
 
+INSERT INTO public.roles(
+role_name, role_description, role_created_at)
+VALUES ('ROOT', 'SYSTEM ADMINISTRATOR', EXTRACT(EPOCH FROM CURRENT_TIMESTAMP));
+
+INSERT INTO public.roles(
+role_name, role_description, role_created_at)
+VALUES ('COMPANY_ADMIN', 'COMPANY ADMINISTRATOR', EXTRACT(EPOCH FROM CURRENT_TIMESTAMP));
+
+INSERT INTO public.roles(
+role_name, role_description, role_created_at)
+VALUES ('COMPANY_USER', 'COMPANY USER', EXTRACT(EPOCH FROM CURRENT_TIMESTAMP));
+	
 create table public.companies (
 	id serial4 not null,
 	company_api_key varchar(100) not null,

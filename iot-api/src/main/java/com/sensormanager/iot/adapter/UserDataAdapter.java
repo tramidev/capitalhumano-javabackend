@@ -39,7 +39,6 @@ public class UserDataAdapter {
                 .userExpireAt(userDTO.getUserExpireAt())
                 .userStatus(userDTO.getUserStatus())
                 .company(Company.builder().id(userDTO.getCompanyId()).build())
-                .companyName(Company.builder().companyName(userDTO.getCompanyName()).build())
                 .build();
     }
 }

@@ -1,6 +1,7 @@
 package com.sensormanager.iot.model;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -43,13 +44,9 @@ public class User {
     private Long userExpireAt;
     private Boolean userStatus;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_company", nullable = false)
     private Company company;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_company", nullable = false, insertable = false, updatable = false)
-    private Company companyName;
 
     @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
     @JoinTable(
@@ -62,6 +59,16 @@ public class User {
     @PrePersist
     protected void onCreate() {
         this.userCreatedAt = Instant.now().getEpochSecond();
+        this.userExpireAt = Instant.now().plus(365, ChronoUnit.DAYS).getEpochSecond();
+    }
+    
+    public boolean hasRole(String role) {
+        for (Role authority : this.getRoleName()) {
+            if (authority.getRoleName().equals(role)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }
