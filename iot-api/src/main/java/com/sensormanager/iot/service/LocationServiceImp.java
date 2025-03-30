@@ -3,12 +3,13 @@ package com.sensormanager.iot.service;
 import com.sensormanager.iot.adapter.LocationDataAdapter;
 import com.sensormanager.iot.dto.LocationDTO;
 import com.sensormanager.iot.model.Company;
-import com.sensormanager.iot.model.CustomUserSecurity;
 import com.sensormanager.iot.model.Location;
 import com.sensormanager.iot.model.Sensor;
 import com.sensormanager.iot.repository.CompanyRepository;
 import com.sensormanager.iot.repository.LocationRepository;
 import com.sensormanager.iot.repository.SensorRepository;
+import com.sensormanager.iot.security.CustomUserSecurity;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -98,6 +99,14 @@ public class LocationServiceImp implements LocationService {
         if (locationToUpdate == null) {
             return new LocationDTO();
         }
+        
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+        	CustomUserSecurity userAuth = (CustomUserSecurity) authentication.getPrincipal();    
+        	if (!userAuth.hasRole("ROOT") && locationToUpdate.getCompany().getId() != userAuth.getCompany().getId()) {
+        		return new LocationDTO();
+        	}
+        } else new LocationDTO(); 
 
         locationToUpdate.setLocationName(
                 locationDTO.getLocationName() != null ? locationDTO.getLocationName() : locationToUpdate.getLocationName()

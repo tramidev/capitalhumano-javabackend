@@ -10,10 +10,10 @@ import org.springframework.stereotype.Service;
 import com.sensormanager.iot.adapter.UserDataAdapter;
 import com.sensormanager.iot.dto.UserDTO;
 import com.sensormanager.iot.model.Company;
-import com.sensormanager.iot.model.CustomUserSecurity;
 import com.sensormanager.iot.model.User;
 import com.sensormanager.iot.repository.CompanyRepository;
 import com.sensormanager.iot.repository.UserRepository;
+import com.sensormanager.iot.security.CustomUserSecurity;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

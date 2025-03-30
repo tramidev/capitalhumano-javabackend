@@ -42,6 +42,7 @@ public class SecurityConfig {
             	auth.requestMatchers("/users/**").hasAnyAuthority("ROOT","COMPANY_ADMIN");
             	auth.requestMatchers("/locations/**").hasAnyAuthority("ROOT","COMPANY_ADMIN");
             	auth.requestMatchers("/sensors/**").hasAnyAuthority("ROOT","COMPANY_ADMIN");
+            	auth.requestMatchers("/user-role/**").hasAnyAuthority("ROOT","COMPANY_ADMIN");
             	auth.requestMatchers(HttpMethod.GET,"/api/v1/sensordata/**").hasAnyAuthority("ROOT","COMPANY_ADMIN","COMPANY_USER");
             	auth.requestMatchers(HttpMethod.POST,"/api/v1/sensordata/**").permitAll();
             	auth.anyRequest().denyAll();

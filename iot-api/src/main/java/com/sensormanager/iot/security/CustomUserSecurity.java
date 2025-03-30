@@ -1,7 +1,9 @@
-package com.sensormanager.iot.model;
+package com.sensormanager.iot.security;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
+
+import com.sensormanager.iot.model.Company;
 
 import lombok.Getter;
 

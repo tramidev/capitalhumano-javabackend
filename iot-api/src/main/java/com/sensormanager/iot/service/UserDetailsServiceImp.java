@@ -11,8 +11,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.sensormanager.iot.model.User;
-import com.sensormanager.iot.model.CustomUserSecurity;
 import com.sensormanager.iot.repository.UserRepository;
+import com.sensormanager.iot.security.CustomUserSecurity;
 
 @Service
 public class UserDetailsServiceImp implements UserDetailsService{
