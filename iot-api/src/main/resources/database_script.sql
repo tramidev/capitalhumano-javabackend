@@ -86,3 +86,59 @@ create table public.records (
 	record_created_at BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP))::BIGINT NOT NULL,
 	constraint record_sensor foreign key (id_sensor) references public.sensors(id)
 );
+
+--
+-- TOC entry 4862 (class 0 OID 33406)
+-- Dependencies: 220
+-- Data for Name: companies; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO public.companies (id, company_api_key, company_name, company_status, company_created_at) VALUES (4, 'ecxH_g1ToQVX-W8wOq4EbN3J0Zh1ADP6RBtEWHb19tc', 'Compañia 4', false, 1742173797);
+INSERT INTO public.companies (id, company_api_key, company_name, company_status, company_created_at) VALUES (2, 'vNEr759dXjJcRy8PSz4OLGT9qBpgaeBUCB1jUcZzo3A', 'Compañia 1', true, 1742172013);
+INSERT INTO public.companies (id, company_api_key, company_name, company_status, company_created_at) VALUES (3, 'DKVPDja9BHF9MNQCeSZhrtw4lW48pw1dqQQKcbV2-_A', 'Compañia 3', true, 1742172032);
+INSERT INTO public.companies (id, company_api_key, company_name, company_status, company_created_at) VALUES (5, 'DKVPDja9BHF9MNQCeSZhrtw4lW48pw1dqQQKcbV2-_A', 'Compañia 5', false, 1743305285);
+
+
+--
+-- TOC entry 4864 (class 0 OID 33414)
+-- Dependencies: 222
+-- Data for Name: locations; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO public.locations (id, location_name, location_country, location_city, location_street, location_number, location_status, location_created_at, company_id) VALUES (1, 'Lugar 1', 'RM', 'Ciudad 1', 'Calle falsa', '123', true, 1742433289, 3);
+INSERT INTO public.locations (id, location_name, location_country, location_city, location_street, location_number, location_status, location_created_at, company_id) VALUES (2, 'Lugar 2', 'RM', 'Ciudad 2', 'Calle falsa', '123', true, 1742433314, 2);
+INSERT INTO public.locations (id, location_name, location_country, location_city, location_street, location_number, location_status, location_created_at, company_id) VALUES (3, 'Lugar 2', 'RM', 'Ciudad 2', 'Calle falsa', '123', false, 1742433320, 4);
+INSERT INTO public.locations (id, location_name, location_country, location_city, location_street, location_number, location_status, location_created_at, company_id) VALUES (4, 'Lugar 4', 'RM', 'Ciudad 4', 'Calle falsa', '123', true, 1743307346, 3);
+INSERT INTO public.locations (id, location_name, location_country, location_city, location_street, location_number, location_status, location_created_at, company_id) VALUES (5, 'Lugar 5', 'RM', 'Ciudad 5', 'Calle falsa', '123', true, 1743307418, 3);
+INSERT INTO public.locations (id, location_name, location_country, location_city, location_street, location_number, location_status, location_created_at, company_id) VALUES (6, 'Lugar 6', 'RM', 'Ciudad 6', 'Calle falsa', '123', false, 1743307541, 3);
+
+--
+-- TOC entry 4860 (class 0 OID 33398)
+-- Dependencies: 218
+-- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO public.roles (id, role_name, role_description, role_created_at) VALUES (1, 'ROOT', 'SYSTEM ADMINISTRATOR', 1743281863);
+INSERT INTO public.roles (id, role_name, role_description, role_created_at) VALUES (2, 'COMPANY_ADMIN', 'COMPANY ADMINISTRATOR', 1743281863);
+INSERT INTO public.roles (id, role_name, role_description, role_created_at) VALUES (3, 'COMPANY_USER', 'COMPANY USER', 1743281863);
+
+--
+-- TOC entry 4866 (class 0 OID 33427)
+-- Dependencies: 224
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO public.users (id, first_name, last_name, username, password, user_email, user_created_at, user_modified_at, user_expire_at, user_status, user_company) VALUES (3, 'Administrador', 'Compañia 3', 'admincompany3', '$2b$12$3a6TexEB23O5ShDvD50Sm.XhVqMQbhjmy.uEa4XaWSGKsaOo5S7Fi', 'root2@root.cl', 1743282966, 1743282967, 1774818966, true, 3);
+INSERT INTO public.users (id, first_name, last_name, username, password, user_email, user_created_at, user_modified_at, user_expire_at, user_status, user_company) VALUES (5, 'Administrador', 'Compañia 4', 'admincompany4', '$2a$10$pqKRhI84ZU5D7TiZvseREeF/VKze4jFR4zjy7jgTpXSTceKvT2IdK', 'root3@root.cl', 1743300854, 1743300854, 1774836854, false, 4);
+INSERT INTO public.users (id, first_name, last_name, username, password, user_email, user_created_at, user_modified_at, user_expire_at, user_status, user_company) VALUES (1, 'Administrador', 'Sistema', 'root', '$2b$12$1Lrge8W7loZeOOv8SQ9/hewYe9SGXkKJRgfFb173dgnpC4Frjr3Gi', 'root@root.cl', 1743282814, 1743282814, 1774818814, true, 2);
+
+
+--
+-- TOC entry 4867 (class 0 OID 33445)
+-- Dependencies: 225
+-- Data for Name: users_roles; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO public.users_roles (user_id, role_id) VALUES (1, 1);
+INSERT INTO public.users_roles (user_id, role_id) VALUES (3, 2);
+INSERT INTO public.users_roles (user_id, role_id) VALUES (5, 2);

@@ -13,6 +13,7 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
     List<Location> findByLocationStatusTrue();
     List<Location> findByCompanyAndLocationStatusTrue(Company company);
     Optional<Location> findByIdAndLocationStatusTrue(Long id);
+    Optional<Location> findByIdAndLocationStatusTrueAndCompany(Long id, Company company);
     Optional<Location> findByIdAndCompany(Long id, Company company);
     boolean existsByLocationNameAndCompany(String locationName, Company company);
     void deleteById(Long id);

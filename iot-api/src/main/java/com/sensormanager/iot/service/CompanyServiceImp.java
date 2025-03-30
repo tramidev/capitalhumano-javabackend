@@ -30,8 +30,8 @@ public class CompanyServiceImp implements CompanyService {
 
 	@Override
 	public CompanyDTO findById(Long id) {
-		Company company = companyRepository.findByIdAndCompanyStatusTrue(id).orElse(new Company());
-        if (company == null || company.getId() == null) {
+		Company company = companyRepository.findByIdAndCompanyStatusTrue(id).orElse(null);
+        if (company == null) {
             return new CompanyDTO();
         }
         return CompanyDataAdapter.toDTO(company);
@@ -56,7 +56,7 @@ public class CompanyServiceImp implements CompanyService {
 	@Override
 	public CompanyDTO update(CompanyDTO companyDto) {
 		
-		Company companyWillUpdated = companyRepository.findById(companyDto.getId()).get();		
+		Company companyWillUpdated = companyRepository.findById(companyDto.getId()).orElse(null);	
 		if (companyWillUpdated == null) {
             return new CompanyDTO();
         }
@@ -68,17 +68,21 @@ public class CompanyServiceImp implements CompanyService {
         }
         return CompanyDataAdapter.toDTO(companyUpdated);
 	}
-
+	
+	@Autowired
+	LocationServiceImp locationService;
+	
 	@Override
 	public CompanyDTO deleteById(Long id) {
-		Company companyWillDeleted = companyRepository.findById(id).get();
+		Company companyWillDeleted = companyRepository.findById(id).orElse(null);
         if (companyWillDeleted == null) {
             return new CompanyDTO();
         }
         companyWillDeleted.setCompanyStatus(false);
        
         if (companyWillDeleted.getLocations() != null) {
-        	companyWillDeleted.getLocations().forEach(location -> location.setLocationStatus(false));
+        	
+        	companyWillDeleted.getLocations().forEach(location -> locationService.deleteById(location.getId()));
         }
         
         Company companyDeleted= companyRepository.save(companyWillDeleted);
