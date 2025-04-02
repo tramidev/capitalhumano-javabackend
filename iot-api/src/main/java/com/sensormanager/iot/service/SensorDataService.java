@@ -1,6 +1,7 @@
 package com.sensormanager.iot.service;
 
 import com.sensormanager.iot.adapter.SensorDataDataAdapter;
+import com.sensormanager.iot.camel.SensorJSONPackage;
 import com.sensormanager.iot.dto.SensorDataDTO;
 import com.sensormanager.iot.model.SensorData;
 import com.sensormanager.iot.repository.SensorDataRepository;
@@ -36,6 +37,11 @@ public class SensorDataService {
         SensorData sensorData = SensorDataDataAdapter.toEntity(sensorDataDTO);
         SensorData savedSensorData = sensorDataRepository.save(sensorData);
         return SensorDataDataAdapter.toDTO(savedSensorData);
+    }
+
+    public SensorDataDTO createSensorData(SensorJSONPackage sensorDataFromJSONPackage) {
+        //To Be Implemented
+        return null;
     }
 
     public SensorDataDTO updateSensorData(Long id, SensorDataDTO sensorDataDTO) {
