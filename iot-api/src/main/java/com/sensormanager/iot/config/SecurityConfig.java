@@ -1,6 +1,7 @@
 package com.sensormanager.iot.config;
 
 
+import com.sensormanager.iot.service.UserDetailsServiceImp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,7 +29,7 @@ public class SecurityConfig {
 	
 	@Autowired
     private CustomAccessDeniedHandler customAccessDeniedHandler;
-	
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
     	httpSecurity
@@ -47,6 +48,9 @@ public class SecurityConfig {
             	auth.requestMatchers(HttpMethod.POST,"/api/v1/sensordata/**").permitAll();
             	auth.anyRequest().denyAll();
             });
+        //REGISTRA EXPLÍCITAMENTE EL AUTHPROVIDER
+        httpSecurity.authenticationProvider(authenticationProvider(userDetailsService()));
+
         return httpSecurity.build();
     }
     
@@ -66,6 +70,11 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return new UserDetailsServiceImp();
     }
     
 }
