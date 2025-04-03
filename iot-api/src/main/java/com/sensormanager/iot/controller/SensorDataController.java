@@ -1,6 +1,7 @@
 package com.sensormanager.iot.controller;
 
 import com.sensormanager.iot.dto.SensorDataDTO;
+import com.sensormanager.iot.dto.SensorJSONPackageDTO;
 import com.sensormanager.iot.service.SensorDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -38,8 +39,8 @@ public class SensorDataController {
 
     // Crear un nuevo registro de sensor
     @PostMapping
-    public ResponseEntity<SensorDataDTO> createSensorData(@RequestBody SensorDataDTO sensorDataDTO) {
-        SensorDataDTO createdSensorData = sensorDataService.createSensorData(sensorDataDTO);
+    public ResponseEntity<List<SensorDataDTO>> createSensorData(@RequestBody SensorJSONPackageDTO sensorDataDTO) {
+        List<SensorDataDTO> createdSensorData = sensorDataService.createSensorData(sensorDataDTO);
         return ResponseEntity.ok(createdSensorData);
     }
 

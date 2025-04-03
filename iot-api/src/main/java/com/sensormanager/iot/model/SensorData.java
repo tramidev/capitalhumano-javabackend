@@ -1,8 +1,16 @@
 package com.sensormanager.iot.model;
 
 import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.Instant;
 import java.time.LocalDateTime;
 
+@Setter
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Entity
 @Table(name = "sensor_data")
 public class SensorData {
@@ -11,59 +19,21 @@ public class SensorData {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "sensor_id", nullable = false)
-    private Long sensorId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_sensor", nullable = false)
+    private Sensor sensor;
 
-    @Column(name = "value", nullable = false)
-    private Double value;
+    @Column(name = "metric", nullable = false)
+    private String metric;
 
-    @Column(name = "timestamp", nullable = false)
-    private LocalDateTime timestamp;
+    @Column(name = "record", nullable = false)
+    private String record;
 
-    public SensorData() {}
+    @Column(name = "record_created_at", nullable = false)
+    private Long recordCreatedAt;
 
-    public SensorData(Long sensorId, Double value, LocalDateTime timestamp) {
-        this.sensorId = sensorId;
-        this.value = value;
-        this.timestamp = timestamp;
-    }
-
-    public SensorData(Long id, Long sensorId, Double value, LocalDateTime timestamp) {
-        this.id = id;
-        this.sensorId = sensorId;
-        this.value = value;
-        this.timestamp = timestamp;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getSensorId() {
-        return sensorId;
-    }
-
-    public void setSensorId(Long sensorId) {
-        this.sensorId = sensorId;
-    }
-
-    public Double getValue() {
-        return value;
-    }
-
-    public void setValue(Double value) {
-        this.value = value;
-    }
-
-    public LocalDateTime getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
+    @PrePersist
+    protected void onCreate() {
+        this.recordCreatedAt = Instant.now().getEpochSecond();
     }
 }
