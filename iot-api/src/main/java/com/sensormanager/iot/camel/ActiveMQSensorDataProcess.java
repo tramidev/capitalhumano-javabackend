@@ -1,7 +1,7 @@
 package com.sensormanager.iot.camel;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sensormanager.iot.dto.SensorDataDTO;
+import com.sensormanager.iot.dto.SensorJSONPackageDTO;
 import com.sensormanager.iot.service.SensorDataService;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
@@ -19,7 +19,7 @@ public class ActiveMQSensorDataProcess implements Processor{
         objectMapper.findAndRegisterModules();
         String jsonBody = exchange.getIn().getBody(String.class);
         try {
-            SensorJSONPackage sensorData = objectMapper.readValue(jsonBody, SensorJSONPackage.class);
+            SensorJSONPackageDTO sensorData = objectMapper.readValue(jsonBody, SensorJSONPackageDTO.class);
             sensorDataService.createSensorData(sensorData);
         } catch (Exception e) {
             throw new RuntimeException("Invalid Json format for SensorJSONPackage", e);
