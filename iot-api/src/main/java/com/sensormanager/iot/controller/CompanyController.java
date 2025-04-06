@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.sensormanager.iot.service.CompanyService;
 import com.sensormanager.iot.dto.CompanyDTO;
@@ -37,7 +38,7 @@ public class CompanyController {
 	    public ResponseEntity<CompanyDTO> findById(@PathVariable Long id){
 	        CompanyDTO CompanyDTO = CompanyService.findById(id);
 	        if(CompanyDTO.getId() == null){
-	            return ResponseEntity.status(HttpStatus.NOT_FOUND.value()).body(CompanyDTO);
+	        	throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The company ID: " + id + " does not exist.");
 	        }
 	        return ResponseEntity.status(HttpStatus.OK.value()).body(CompanyDTO);
 	    }
@@ -46,7 +47,7 @@ public class CompanyController {
 	    public ResponseEntity<CompanyDTO> create(@RequestBody CompanyDTO CompanyDTO){
 	        CompanyDTO CompanyInsertado = CompanyService.create(CompanyDTO);
 	        if(CompanyInsertado.getId() == null){
-	            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(CompanyInsertado);
+	        	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The company was not inserted.");
 	        }
 	        return ResponseEntity.status(HttpStatus.OK.value()).body(CompanyInsertado);
 	    }
@@ -55,7 +56,7 @@ public class CompanyController {
 	    public ResponseEntity<CompanyDTO> update(@RequestBody CompanyDTO CompanyDTO){
 	        CompanyDTO CompanyActualizado = CompanyService.update(CompanyDTO);
 	        if(CompanyActualizado.getId() == null){
-	            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(CompanyActualizado);
+	        	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The company was not updated.");
 	        }
 	        return ResponseEntity.status(HttpStatus.OK.value()).body(CompanyActualizado);
 	    }
@@ -64,7 +65,7 @@ public class CompanyController {
 	    public ResponseEntity<CompanyDTO> deleteById(@PathVariable Long id){
 	        CompanyDTO CompanyEliminado = CompanyService.deleteById(id);
 	        if(CompanyEliminado.getId() == null){
-	            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(CompanyEliminado);
+	        	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The company was not disabled.");
 	        }
 	        return ResponseEntity.status(HttpStatus.OK.value()).body(CompanyEliminado);
 	    }

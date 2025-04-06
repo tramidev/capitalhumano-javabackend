@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.sensormanager.iot.dto.UserDTO;
 import com.sensormanager.iot.service.UserService;
@@ -37,7 +38,7 @@ public class UserController {
     public ResponseEntity<UserDTO> findById(@PathVariable Long id) {
         UserDTO userDto = userService.findById(id);
         if (userDto.getId() == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND.value()).body(userDto);
+        	throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The user ID: " + id + " does not exist.");
         }
         return ResponseEntity.status(HttpStatus.OK.value()).body(userDto);
     }
@@ -46,7 +47,7 @@ public class UserController {
     public ResponseEntity<UserDTO> create(@RequestBody UserDTO userDto) {
         UserDTO newUser = userService.create(userDto);
         if (newUser.getId() == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(newUser);
+        	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The user was not inserted.");
         }
         return ResponseEntity.status(HttpStatus.OK.value()).body(newUser);
     }
@@ -55,7 +56,7 @@ public class UserController {
     public ResponseEntity<UserDTO> deleteById(@PathVariable Long id) {
         UserDTO deleteUser = userService.deleteById(id);
         if (deleteUser.getId().equals(id)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(deleteUser);
+        	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The user was not disabled.");
         }
         return ResponseEntity.status(HttpStatus.OK.value()).body(deleteUser);
     }
@@ -64,7 +65,7 @@ public class UserController {
     public ResponseEntity<UserDTO> update(@RequestBody UserDTO userDTO) {
         UserDTO userUpdate = userService.update(userDTO);
         if (userUpdate.getId() == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND.value()).body(userUpdate);
+        	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The user was not updated.");
         }
         return ResponseEntity.status(HttpStatus.OK.value()).body(userUpdate);
     }
