@@ -5,8 +5,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jms.activemq.ActiveMQAutoConfiguration;
 
-@SpringBootApplication
-@EnableAutoConfiguration(exclude = {ActiveMQAutoConfiguration.class})
+@SpringBootApplication(exclude = {ActiveMQAutoConfiguration.class})
 public class IotApiApplication {
 
 	public static void main(String[] args) {
