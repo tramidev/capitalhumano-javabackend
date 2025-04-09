@@ -21,11 +21,25 @@ public class UserDetailsServiceImp implements UserDetailsService{
 	private UserRepository userRepository;
 	
 	@Override
-	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {		
-		User user = userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("El usuario o contraseña son incorrectos."));
-		if (!user.hasRole("ROOT") && (user.getCompany() == null || !user.getCompany().getCompanyStatus())) throw new UsernameNotFoundException("La compañía asociada al usuario está deshabilitada.");
-		List<SimpleGrantedAuthority> authorities = user.getRoleName().stream().map(role -> new SimpleGrantedAuthority(role.getRoleName())).collect(Collectors.toList());
-		return new CustomUserSecurity(user.getUsername(), user.getPassword(), user.getUserStatus(), authorities, user.getCompany());
-	}
+	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+		User user = userRepository.findByUsername(username)
+				.orElseThrow(() -> new UsernameNotFoundException("El usuario o contraseña son incorrectos."));
 
+		if (!user.hasRole("ROOT") && (user.getCompany() == null || !user.getCompany().getCompanyStatus())) {
+			throw new UsernameNotFoundException("La compañía asociada al usuario está deshabilitada.");
+		}
+		List<SimpleGrantedAuthority> authorities = user.getRoleName().stream()
+				.map(role -> new SimpleGrantedAuthority(role.getRoleName()))
+				.collect(Collectors.toList());
+
+		return new CustomUserSecurity(
+				user.getUsername(),
+				user.getPassword(),
+				user.getUserStatus(),
+				authorities,
+				user.getCompany()
+		);
+
+	}
 }
+
