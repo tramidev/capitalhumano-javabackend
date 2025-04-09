@@ -4,37 +4,27 @@ import com.sensormanager.iot.adapter.SensorDataDataAdapter;
 import com.sensormanager.iot.dto.SensorJSONPackageDTO;
 import com.sensormanager.iot.dto.SensorDataDTO;
 import com.sensormanager.iot.model.Sensor;
+import com.sensormanager.iot.repository.SensorRepository;
+import com.sensormanager.iot.security.CustomUserSecurity;
 import com.sensormanager.iot.model.SensorData;
 import com.sensormanager.iot.repository.SensorDataRepository;
-import com.sensormanager.iot.repository.SensorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class SensorDataService {
+public class SensorDataServiceImp implements SersorDataService{
 
     @Autowired
     private SensorDataRepository sensorDataRepository;
 
     @Autowired
     private SensorRepository sensorRepository;
-
-
-    public List<SensorDataDTO> getAllSensorData() {
-        return sensorDataRepository.findAll().stream()
-                .map(SensorDataDataAdapter::toDTO)
-                .collect(Collectors.toList());
-    }
-
-    public SensorDataDTO getSensorDataById(Long id) {
-        return sensorDataRepository.findById(id)
-                .map(SensorDataDataAdapter::toDTO)
-                .orElse(null);
-    }
-
+        
     public SensorDataDTO createSensorData(SensorDataDTO sensorDataDTO) {
         SensorData sensorData = SensorDataDataAdapter.toEntity(sensorDataDTO);
         SensorData savedSensorData = sensorDataRepository.save(sensorData);
@@ -63,20 +53,28 @@ public class SensorDataService {
         }
         return sensorDatas.stream().map(this::createSensorData).collect(Collectors.toList());
     }
-
-    public SensorDataDTO updateSensorData(Long id, SensorDataDTO sensorDataDTO) {
-        return null;
-        /*
-        return sensorDataRepository.findById(id).map(existingSensor -> {
-            existingSensor.setValue(sensorDataDTO.getValue());
-            existingSensor.setTimestamp(sensorDataDTO.getTimestamp());
-            SensorData updatedSensor = sensorDataRepository.save(existingSensor);
-            return SensorDataDataAdapter.toDTO(updatedSensor);
-        }).orElse(null);
-        */
+    
+    public List<SensorDataDTO> getSensorData(List<Long> sensorIds, Long from, Long to) {
+    	
+    	Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+        	CustomUserSecurity userAuth = (CustomUserSecurity) authentication.getPrincipal();    
+        	if (userAuth.hasRole("ROOT")) {
+        		return sensorDataRepository.findBySensorIdInAndRecordCreatedAtBetween(sensorIds, from, to)
+    	                .stream()
+    	                .map(SensorDataDataAdapter::toDTO)
+    	                .collect(Collectors.toList());
+        	} else {        		
+        		List<Long> validSensorsIds = sensorRepository.findByIdInAndSensorCompanyId(sensorIds, userAuth.getCompany().getId()).stream().map(Sensor::getId).toList();        	    
+        	    if (validSensorsIds.isEmpty()) {
+        	        return Collections.emptyList();
+        	    }        	    
+        		return sensorDataRepository.findBySensorIdInAndRecordCreatedAtBetween(validSensorsIds, from, to)
+        	                .stream()
+        	                .map(SensorDataDataAdapter::toDTO)
+        	                .collect(Collectors.toList());
+        	}
+        } return Collections.emptyList();
     }
 
-    public void deleteSensorData(Long id) {
-        sensorDataRepository.deleteById(id);
-    }
 }

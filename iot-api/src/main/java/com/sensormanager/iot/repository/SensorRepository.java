@@ -22,4 +22,5 @@ public interface SensorRepository extends JpaRepository<Sensor, Integer>{
 	Optional<Sensor> findByIdAndSensorStatusTrue(Long SensorId);
 	boolean deleteById(Long sensorId);
 	Optional<Sensor> findSensorBySensorApiKey(String apiKey);
+	List<Sensor> findByIdInAndSensorCompanyId(List<Long> sensorIds, Long companyId);
 }
