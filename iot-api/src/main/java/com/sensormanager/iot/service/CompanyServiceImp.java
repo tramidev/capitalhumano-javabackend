@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.sensormanager.iot.security.AuthenticatedService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,40 +19,58 @@ public class CompanyServiceImp implements CompanyService {
 
 	@Autowired
     private CompanyRepository companyRepository;
-	
-	@Override
-	public List<CompanyDTO> findAll() {
-        List<Company> companies = companyRepository.findByCompanyStatusTrue();
-        if (companies == null) {
-            return new ArrayList<CompanyDTO>();
+
+    @Autowired
+    private AuthenticatedService authenticatedService;
+
+    @Autowired
+    private LocationServiceImp locationService;
+
+    @Override
+    public List<CompanyDTO> findAll() {
+        if (authenticatedService.isRootUser()) {
+            List<Company> companies = companyRepository.findByCompanyStatusTrue();
+            if (companies == null) return new ArrayList<>();
+            return companies.stream().map(CompanyDataAdapter::toDTO).collect(Collectors.toList());
         }
-        return companies.stream().map(CompanyDataAdapter::toDTO).collect(Collectors.toList());
+
+        Company ownCompany = authenticatedService.getAuthenticatedCompany();
+        if (ownCompany == null) return new ArrayList<>();
+
+        CompanyDTO dto = CompanyDataAdapter.toDTO(ownCompany);
+        List<CompanyDTO> result = new ArrayList<>();
+        result.add(dto);
+        return result;
     }
 
-	@Override
-	public CompanyDTO findById(Long id) {
-		Company company = companyRepository.findByIdAndCompanyStatusTrue(id).orElse(null);
-        if (company == null) {
-            return new CompanyDTO();
-        }
-        return CompanyDataAdapter.toDTO(company);
-	}
+    @Override
+    public CompanyDTO findById(Long id) {
+        Company company = companyRepository.findByIdAndCompanyStatusTrue(id).orElse(null);
+        if (company == null) return new CompanyDTO();
 
-	@Override
-	public CompanyDTO create(CompanyDTO companyDto) {
-		if (companyRepository.existsByCompanyName(companyDto.getCompanyName())) {
-            return new CompanyDTO();
-        }		
-		companyDto.setCompanyApiKey(GenerateApiKey.generate(companyDto.getCompanyName()));
-		companyDto.setCompanyStatus(true);		
-        Company company = CompanyDataAdapter.toEntity(companyDto);       
-        Company companyAdded = companyRepository.save(company);
-        
-        if (companyAdded == null) {
+        if (!authenticatedService.isRootUser()) {
+            Company ownCompany = authenticatedService.getAuthenticatedCompany();
+            if (!company.getId().equals(ownCompany.getId())) return new CompanyDTO();
+        }
+
+        return CompanyDataAdapter.toDTO(company);
+    }
+
+    @Override
+    public CompanyDTO create(CompanyDTO companyDto) {
+        if (!authenticatedService.isRootUser()) return new CompanyDTO();
+
+        if (companyRepository.existsByCompanyName(companyDto.getCompanyName())) {
             return new CompanyDTO();
         }
-        return CompanyDataAdapter.toDTO(companyAdded);
-	}
+
+        companyDto.setCompanyApiKey(GenerateApiKey.generate(companyDto.getCompanyName()));
+        companyDto.setCompanyStatus(true);
+        Company company = CompanyDataAdapter.toEntity(companyDto);
+        Company companyAdded = companyRepository.save(company);
+
+        return companyAdded != null ? CompanyDataAdapter.toDTO(companyAdded) : new CompanyDTO();
+    }
 
 	@Override
 	public CompanyDTO update(CompanyDTO companyDto) {
@@ -68,28 +87,22 @@ public class CompanyServiceImp implements CompanyService {
         }
         return CompanyDataAdapter.toDTO(companyUpdated);
 	}
-	
-	@Autowired
-	LocationServiceImp locationService;
-	
-	@Override
-	public CompanyDTO deleteById(Long id) {
-		Company companyWillDeleted = companyRepository.findById(id).orElse(null);
-        if (companyWillDeleted == null) {
-            return new CompanyDTO();
-        }
-        companyWillDeleted.setCompanyStatus(false);
-       
-        if (companyWillDeleted.getLocations() != null) {
-        	
-        	companyWillDeleted.getLocations().forEach(location -> locationService.deleteById(location.getId()));
-        }
-        
-        Company companyDeleted= companyRepository.save(companyWillDeleted);
-        if (companyDeleted == null) {
-            return new CompanyDTO();
-        }
-        return CompanyDataAdapter.toDTO(companyDeleted);
-	}
 
+
+    @Override
+    public CompanyDTO deleteById(Long id) {
+        if (!authenticatedService.isRootUser()) return new CompanyDTO();
+
+        Company company = companyRepository.findById(id).orElse(null);
+        if (company == null) return new CompanyDTO();
+
+        company.setCompanyStatus(false);
+
+        if (company.getLocations() != null) {
+            company.getLocations().forEach(location -> locationService.deleteById(location.getId()));
+        }
+
+        Company companyDeleted = companyRepository.save(company);
+        return companyDeleted != null ? CompanyDataAdapter.toDTO(companyDeleted) : new CompanyDTO();
+    }
 }
