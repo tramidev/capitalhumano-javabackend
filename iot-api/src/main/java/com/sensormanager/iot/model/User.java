@@ -5,18 +5,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.Set;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -42,7 +31,9 @@ public class User {
     private String userEmail;
     private Long userCreatedAt;
     private Long userExpireAt;
-    private Boolean userStatus;
+
+    @Column(name = "user_status", nullable = false)
+    private Boolean userStatus = true;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_company", nullable = false)

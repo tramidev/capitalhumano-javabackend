@@ -54,12 +54,13 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<UserDTO> deleteById(@PathVariable Long id) {
-        UserDTO deleteUser = userService.deleteById(id);
-        if (deleteUser.getId().equals(id)) {
-        	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The user was not disabled.");
+        UserDTO deletedUser = userService.deleteById(id);
+        if (deletedUser.getId() == null || Boolean.TRUE.equals(deletedUser.getUserStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The user was not disabled.");
         }
-        return ResponseEntity.status(HttpStatus.OK.value()).body(deleteUser);
+        return ResponseEntity.ok(deletedUser);
     }
+
 
     @PutMapping
     public ResponseEntity<UserDTO> update(@RequestBody UserDTO userDTO) {
