@@ -9,6 +9,5 @@ import java.util.List;
 @Repository
 public interface SensorDataRepository extends JpaRepository<SensorData, Long> {
 
-    // Buscar el identificador del sensor
-    List<SensorData> findBySensorId(Long sensorId);
+	List<SensorData> findBySensorIdInAndRecordCreatedAtBetween(List<Long> sensorIds, Long from, Long to);
 }

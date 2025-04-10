@@ -2,7 +2,7 @@ package com.sensormanager.iot.camel;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sensormanager.iot.dto.SensorJSONPackageDTO;
-import com.sensormanager.iot.service.SensorDataService;
+import com.sensormanager.iot.service.SensorDataServiceImp;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,8 +10,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ActiveMQSensorDataProcess implements Processor{
-    @Autowired
-    private SensorDataService sensorDataService;
+    
+	@Autowired
+    private SensorDataServiceImp sensorDataService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
