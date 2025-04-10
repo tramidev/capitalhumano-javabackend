@@ -32,10 +32,10 @@ public class SensorDataController {
     @PostMapping
     public ResponseEntity<List<SensorDataDTO>> createSensorData(@RequestBody SensorJSONPackageDTO sensorDataDTO) {
         List<SensorDataDTO> createdSensorData = sensorDataService.createSensorData(sensorDataDTO);
-        if(createdSensorData.size() == 0){
+        if(createdSensorData == null || createdSensorData.size() == 0){
         	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The data was not inserted.");
         }
-        return ResponseEntity.status(HttpStatus.OK.value()).body(createdSensorData);
+        return ResponseEntity.status(HttpStatus.CREATED.value()).body(createdSensorData);
     }
     
 }

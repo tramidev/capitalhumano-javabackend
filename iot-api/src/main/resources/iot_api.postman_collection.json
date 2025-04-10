@@ -15,13 +15,13 @@
 					"type": "basic",
 					"basic": [
 						{
-							"key": "username",
-							"value": "root",
+							"key": "password",
+							"value": "1239",
 							"type": "string"
 						},
 						{
-							"key": "password",
-							"value": "123",
+							"key": "username",
+							"value": "root",
 							"type": "string"
 						}
 					]
@@ -146,13 +146,13 @@
 					"type": "basic",
 					"basic": [
 						{
-							"key": "password",
-							"value": "123",
+							"key": "username",
+							"value": "admincompany3",
 							"type": "string"
 						},
 						{
-							"key": "username",
-							"value": "root",
+							"key": "password",
+							"value": "123",
 							"type": "string"
 						}
 					]
@@ -474,6 +474,138 @@
 					"path": [
 						"locations",
 						"6"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST Sensor Data",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "root",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "123",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/v1/sensordata?from=1743642108&sensor_id=2&to=1744249560",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"sensordata"
+					],
+					"query": [
+						{
+							"key": "from",
+							"value": "1743642108"
+						},
+						{
+							"key": "sensor_id",
+							"value": "2"
+						},
+						{
+							"key": "sensor_id",
+							"value": "3",
+							"disabled": true
+						},
+						{
+							"key": "sensor_id",
+							"value": "4",
+							"disabled": true
+						},
+						{
+							"key": "to",
+							"value": "1744249560"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST Sensor Data",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\t\"api_key\": \"82ba1908-96c7-4a7b-854c-969a5e389909\",\r\n\t\"json_data\":[\r\n\t\t{ \r\n\t\t\t\"datetime\": 1742860430,\r\n\t\t\t\"temp\": 24.4,\r\n\t\t\t\"humidity\": 0.5\r\n\t\t},\r\n\t\t{ \r\n\t\t\t\"datetime\": 1742861495,\r\n\t\t\t\"temp\": 22.1,\r\n\t\t\t\"density\": 0.6,\r\n            \"distance\": 1\r\n\t\t}\r\n\t]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/v1/sensordata",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"sensordata"
+					],
+					"query": [
+						{
+							"key": "from",
+							"value": "1743642108",
+							"disabled": true
+						},
+						{
+							"key": "to",
+							"value": "1743712656",
+							"disabled": true
+						},
+						{
+							"key": "sensor_id",
+							"value": "2",
+							"disabled": true
+						},
+						{
+							"key": "sensor_id",
+							"value": "3",
+							"disabled": true
+						},
+						{
+							"key": "sensor_id",
+							"value": "4",
+							"disabled": true
+						}
 					]
 				}
 			},
