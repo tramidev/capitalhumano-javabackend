@@ -1,5 +1,6 @@
 package com.sensormanager.iot.security;
 
+import com.sensormanager.iot.model.Company;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -34,6 +35,12 @@ public class AuthenticatedService {
     public boolean isAuthenticated() {
         return getAuthenticatedUser() != null;
     }
+
+    public Company getAuthenticatedCompany() {
+        CustomUserSecurity user = getAuthenticatedUser();
+        return user != null ? user.getCompany() : null;
+    }
+
 
 
 
