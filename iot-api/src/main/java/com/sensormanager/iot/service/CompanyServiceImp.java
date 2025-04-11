@@ -72,22 +72,31 @@ public class CompanyServiceImp implements CompanyService {
         return companyAdded != null ? CompanyDataAdapter.toDTO(companyAdded) : new CompanyDTO();
     }
 
-	@Override
-	public CompanyDTO update(CompanyDTO companyDto) {
-		
-		Company companyWillUpdated = companyRepository.findById(companyDto.getId()).orElse(null);	
-		if (companyWillUpdated == null) {
+    @Override
+    public CompanyDTO update(CompanyDTO companyDto) {
+        Company companyToUpdate = companyRepository.findById(companyDto.getId()).orElse(null);
+        if (companyToUpdate == null) {
             return new CompanyDTO();
         }
-		companyWillUpdated.setCompanyName(companyDto.getCompanyName() != null && companyDto.getCompanyName().length() > 0 ? companyDto.getCompanyName() : companyWillUpdated.getCompanyName());
-		companyWillUpdated.setCompanyStatus(companyDto.getCompanyStatus() != null ? companyDto.getCompanyStatus() : companyWillUpdated.getCompanyStatus());
-        Company companyUpdated = companyRepository.save(companyWillUpdated);
-        if (companyUpdated == null) {
-            return new CompanyDTO();
-        }
-        return CompanyDataAdapter.toDTO(companyUpdated);
-	}
 
+        if (!authenticatedService.isRootUser()) {
+            Company userCompany = authenticatedService.getAuthenticatedCompany();
+            if (userCompany == null || !companyToUpdate.getId().equals(userCompany.getId())) {
+                return new CompanyDTO();
+            }
+        }
+
+        if (companyDto.getCompanyName() != null && !companyDto.getCompanyName().isEmpty()) {
+            companyToUpdate.setCompanyName(companyDto.getCompanyName());
+        }
+
+        if (companyDto.getCompanyStatus() != null) {
+            companyToUpdate.setCompanyStatus(companyDto.getCompanyStatus());
+        }
+
+        Company companyUpdated = companyRepository.save(companyToUpdate);
+        return companyUpdated != null ? CompanyDataAdapter.toDTO(companyUpdated) : new CompanyDTO();
+    }
 
     @Override
     public CompanyDTO deleteById(Long id) {

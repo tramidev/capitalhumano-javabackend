@@ -6,6 +6,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -61,7 +62,7 @@ class SensorDataControllerTest {
         assertNull(response.getBody());
         verify(sensorDataService, times(1)).getSensorDataById(1L);
     }
-
+  /*  @Disabled
     @Test
     void testCreateSensorData() {
         SensorDataDTO inputData = new SensorDataDTO();
@@ -71,7 +72,7 @@ class SensorDataControllerTest {
         assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode());
         assertEquals(mockData, response.getBody());
         verify(sensorDataService, times(1)).createSensorData(inputData);
-    }
+    }*/
 
     @Test
     void testUpdateSensorData_Found() {

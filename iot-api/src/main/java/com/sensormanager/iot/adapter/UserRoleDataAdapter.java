@@ -2,6 +2,7 @@ package com.sensormanager.iot.adapter;
 
 import com.sensormanager.iot.dto.UserRoleDTO;
 import com.sensormanager.iot.model.UserRole;
+import com.sensormanager.iot.model.UserRoleId;
 
 public class UserRoleDataAdapter {
 
@@ -12,10 +13,9 @@ public class UserRoleDataAdapter {
                 .build();
     }
 
-    public static UserRole toEntity(UserRoleDTO userDTO) {
+    public static UserRole toEntity(UserRoleDTO dto) {
         return UserRole.builder()
-                .userId(userDTO.getUserId())
-                .roleId(userDTO.getRoleId())
+                .id(new UserRoleId(dto.getUserId(), dto.getRoleId()))
                 .build();
     }
 }

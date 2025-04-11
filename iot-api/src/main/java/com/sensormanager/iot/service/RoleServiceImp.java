@@ -10,6 +10,7 @@ import com.sensormanager.iot.adapter.RoleDataAdapter;
 import com.sensormanager.iot.dto.RoleDTO;
 import com.sensormanager.iot.model.Role;
 import com.sensormanager.iot.repository.RoleRepository;
+import com.sensormanager.iot.security.AuthenticatedService;
 
 @Service
 public class RoleServiceImp implements RoleService {
@@ -17,23 +18,30 @@ public class RoleServiceImp implements RoleService {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Autowired
+    private AuthenticatedService authenticatedService;
+
     @Override
     public List<RoleDTO> findAll() {
-        List<Role> roles = roleRepository.findAll();
-        return roles.stream().map(RoleDataAdapter::toDTO).collect(Collectors.toList());
+        return roleRepository.findAll().stream()
+                .map(RoleDataAdapter::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     public RoleDTO findById(Long id) {
         Role role = roleRepository.findById(id);
-        if (role == null || role.getId() == null) {
-            return new RoleDTO();
-        }
-        return RoleDataAdapter.toDTO(role);
+        return (role == null || role.getId() == null)
+                ? new RoleDTO()
+                : RoleDataAdapter.toDTO(role);
     }
 
     @Override
     public RoleDTO create(RoleDTO roleDTO) {
+        if (!authenticatedService.isRootUser()) {
+            return new RoleDTO();
+        }
+
         Role role = RoleDataAdapter.toEntity(roleDTO);
         Role savedRole = roleRepository.save(role);
         return RoleDataAdapter.toDTO(savedRole);
@@ -41,23 +49,31 @@ public class RoleServiceImp implements RoleService {
 
     @Override
     public RoleDTO update(RoleDTO roleDto) {
-        Role roleToUpdate = roleRepository.findById(roleDto.getId());
-        if (roleToUpdate == null) {
+        if (!authenticatedService.isRootUser()) {
             return new RoleDTO();
         }
-        roleToUpdate.setRoleName(roleDto.getRoleName());
-        roleToUpdate.setRoleDescription(roleDto.getRoleDescription());
-        Role roleUpdated = roleRepository.save(roleToUpdate);
-        return RoleDataAdapter.toDTO(roleUpdated);
+
+        Role role = roleRepository.findById(roleDto.getId());
+        if (role == null) return new RoleDTO();
+
+        role.setRoleName(roleDto.getRoleName());
+        role.setRoleDescription(roleDto.getRoleDescription());
+
+        Role updated = roleRepository.save(role);
+        return RoleDataAdapter.toDTO(updated);
     }
 
     @Override
     public RoleDTO deleteById(Long id) {
-        Role roleDelete = roleRepository.findById(id);
-        if (roleDelete != null) {
-            roleRepository.delete(roleDelete);
+        if (!authenticatedService.isRootUser()) {
+            return new RoleDTO();
         }
-        return RoleDataAdapter.toDTO(roleDelete);
-    }
 
+        Role role = roleRepository.findById(id);
+        if (role != null) {
+            roleRepository.delete(role);
+        }
+
+        return role != null ? RoleDataAdapter.toDTO(role) : new RoleDTO();
+    }
 }

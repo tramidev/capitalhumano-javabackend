@@ -1,17 +1,20 @@
 package com.sensormanager.iot.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import com.sensormanager.iot.adapter.UserRoleDataAdapter;
+import com.sensormanager.iot.dto.UserRoleDTO;
+import com.sensormanager.iot.model.UserRole;
+import com.sensormanager.iot.model.UserRoleId;
+import com.sensormanager.iot.repository.UserRoleRepository;
+import com.sensormanager.iot.security.AuthenticatedService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.sensormanager.iot.adapter.UserRoleDataAdapter;
-import com.sensormanager.iot.dto.UserRoleDTO;
-import com.sensormanager.iot.model.UserRole;
-import com.sensormanager.iot.repository.UserRoleRepository;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserRoleServiceImp implements UserRoleService {
@@ -19,59 +22,88 @@ public class UserRoleServiceImp implements UserRoleService {
     @Autowired
     private UserRoleRepository userRoleRepository;
 
+    @Autowired
+    private AuthenticatedService authenticatedService;
+
     @Override
     public List<UserRoleDTO> findAll() {
-        List<UserRole> userRoles = userRoleRepository.findAll();
-        return userRoles.stream().map(UserRoleDataAdapter::toDTO).collect(Collectors.toList());
+        if (!authenticatedService.isRootUser()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied.");
+        }
+
+        return userRoleRepository.findAll()
+                .stream()
+                .map(UserRoleDataAdapter::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     public UserRoleDTO findByUserId(Integer userId) {
-        UserRole userRole = userRoleRepository.findByUserId(userId);
-        if (userRole == null || userRole.getUserId() == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "The User Role ID: " + userId + " does not exist."
-            );
+        if (!authenticatedService.isRootUser()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied.");
         }
-        return UserRoleDataAdapter.toDTO(userRole);
+
+        Optional<UserRole> userRoleOpt = userRoleRepository.findByIdUserId(userId);
+
+        return userRoleOpt.map(UserRoleDataAdapter::toDTO)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "El rol para el usuario ID: " + userId + " no fue encontrado."
+                ));
     }
 
     @Override
     public UserRoleDTO create(UserRoleDTO userRoleDto) {
+        if (!authenticatedService.isRootUser()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied.");
+        }
+
+        UserRoleId id = new UserRoleId(userRoleDto.getUserId(), userRoleDto.getRoleId());
+
+        if (userRoleRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ya existe un rol asignado para este usuario.");
+        }
+
         UserRole userRole = UserRoleDataAdapter.toEntity(userRoleDto);
-        UserRole saveUserRole = userRoleRepository.save(userRole);
-        return UserRoleDataAdapter.toDTO(saveUserRole);
+        UserRole saved = userRoleRepository.save(userRole);
+        return UserRoleDataAdapter.toDTO(saved);
     }
 
     @Override
     public UserRoleDTO update(UserRoleDTO userRoleDto) {
-        UserRole userRoleToUpdate = userRoleRepository.findByUserId(userRoleDto.getUserId());
-        if (userRoleToUpdate == null) {
-            return new UserRoleDTO();
+        if (!authenticatedService.isRootUser()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied.");
         }
-        userRoleToUpdate.setUserId(userRoleDto.getUserId());
-        userRoleToUpdate.setRoleId(userRoleDto.getRoleId());
-        UserRole userRoleUpdated = userRoleRepository.save(userRoleToUpdate);
-        return UserRoleDataAdapter.toDTO(userRoleUpdated);
+
+        Optional<UserRole> existingOpt = userRoleRepository.findByIdUserId(userRoleDto.getUserId());
+        if (existingOpt.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User role not found.");
+        }
+
+        // Eliminamos el rol anterior y creamos uno nuevo con la nueva combinación userId + roleId
+        userRoleRepository.delete(existingOpt.get());
+
+        UserRole updated = userRoleRepository.save(UserRoleDataAdapter.toEntity(userRoleDto));
+        return UserRoleDataAdapter.toDTO(updated);
     }
 
     @Override
     public UserRoleDTO deleteById(Integer userId) {
-        UserRole userRoleDelete = userRoleRepository.findByUserId(userId);
-        if (userRoleDelete != null) {
-            userRoleRepository.delete(userRoleDelete);
+        if (!authenticatedService.isRootUser()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied.");
         }
-        return UserRoleDataAdapter.toDTO(userRoleDelete);
+
+        Optional<UserRole> userRoleOpt = userRoleRepository.findByIdUserId(userId);
+        if (userRoleOpt.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User role not found.");
+        }
+
+        userRoleRepository.delete(userRoleOpt.get());
+        return UserRoleDataAdapter.toDTO(userRoleOpt.get());
     }
 
     @Override
     public UserRoleDTO findById(Integer userId) {
-        UserRole userRole = userRoleRepository.findByUserId(userId);
-        if (userRole == null || userRole.getUserId() == null) {
-            return new UserRoleDTO();
-        }
-        return UserRoleDataAdapter.toDTO(userRole);
+        return findByUserId(userId);
     }
-
 }
