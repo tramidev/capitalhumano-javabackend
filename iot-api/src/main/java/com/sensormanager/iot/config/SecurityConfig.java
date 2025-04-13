@@ -29,9 +29,9 @@ public class SecurityConfig {
     private CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity
-                .csrf(csrf -> csrf.disable()) // aún funciona en Spring Boot 3.4.3
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> csrf.disable())
                 .httpBasic(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> {
@@ -39,15 +39,13 @@ public class SecurityConfig {
                     ex.accessDeniedHandler(customAccessDeniedHandler);
                 })
                 .authorizeHttpRequests(auth -> {
-                    // 🚨 Swagger libre:
                     auth.requestMatchers(
                             "/swagger-ui/**",
-                            "/swagger-ui.html",        // 👈 ESTA ES LA QUE FALTABA
+                            "/swagger-ui.html",
                             "/v3/api-docs/**",
                             "/swagger-resources/**",
                             "/webjars/**"
-                    ).permitAll();
-                    // 👇 tus reglas de negocio:
+                    ).authenticated();
                     auth.requestMatchers("/companies/**").hasAnyAuthority("ROOT");
                     auth.requestMatchers("/users/**").hasAnyAuthority("ROOT", "COMPANY_ADMIN");
                     auth.requestMatchers("/locations/**").hasAnyAuthority("ROOT", "COMPANY_ADMIN");
@@ -56,15 +54,16 @@ public class SecurityConfig {
                     auth.requestMatchers(HttpMethod.GET, "/api/v1/sensordata/**").hasAnyAuthority("ROOT", "COMPANY_ADMIN", "COMPANY_USER");
                     auth.requestMatchers(HttpMethod.POST, "/api/v1/sensordata/**").permitAll();
 
+                    // Bloquea todo lo demás
                     auth.anyRequest().denyAll();
                 });
 
-        return httpSecurity.build();
+        return http.build();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
 
     @Bean
