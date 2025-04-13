@@ -23,11 +23,11 @@ public class UserDetailsServiceImp implements UserDetailsService {
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		User user = userRepository.findByUsername(username)
-				.orElseThrow(() -> new UsernameNotFoundException("El usuario o contraseña son incorrectos."));
+				.orElseThrow(() -> new UsernameNotFoundException("User or password incorrect"));
 
 		// Si no es ROOT, la compañia del usuario debe estar activa
 		if (!user.hasRole("ROOT") && (user.getCompany() == null || !Boolean.TRUE.equals(user.getCompany().getCompanyStatus()))) {
-			throw new UsernameNotFoundException("La compañía asociada al usuario está deshabilitada.");
+			throw new UsernameNotFoundException("The company associated to the user is disabled.");
 		}
 
 		List<SimpleGrantedAuthority> authorities = user.getRoleName().stream()

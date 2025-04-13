@@ -72,10 +72,8 @@ public class SensorServiceImp implements SensorService {
 
     @Override
     public SensorDTO create(SensorDTO sensorDTO) {
-        System.out.println("🔧 [DEBUG] Intentando crear sensor con nombre: " + sensorDTO.getSensorName());
 
         if (sensorRepository.existsBySensorName(sensorDTO.getSensorName())) {
-            System.out.println("⚠️ [DEBUG] Ya existe un sensor con ese nombre");
             return new SensorDTO();
         }
 
@@ -84,7 +82,6 @@ public class SensorServiceImp implements SensorService {
                 : authenticatedService.getAuthenticatedCompany();
 
         if (company == null) {
-            System.out.println("❌ [DEBUG] No se encontró la compañía asociada al usuario");
             return new SensorDTO();
         }
 
@@ -98,11 +95,9 @@ public class SensorServiceImp implements SensorService {
         Sensor sensorSaved = sensorRepository.save(sensor);
 
         if (sensorSaved == null) {
-            System.out.println("❌ [DEBUG] El sensor no se guardó correctamente (sensorSaved es null)");
             return new SensorDTO();
         }
 
-        System.out.println("✅ [DEBUG] Sensor creado exitosamente con ID: " + sensorSaved.getId());
         return SensorDataAdapter.toDTO(sensorSaved);
     }
 

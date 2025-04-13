@@ -48,7 +48,7 @@ public class UserRoleServiceImp implements UserRoleService {
         return userRoleOpt.map(UserRoleDataAdapter::toDTO)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        "El rol para el usuario ID: " + userId + " no fue encontrado."
+                        "The rol for the user ID: " + userId + " was not found."
                 ));
     }
 
@@ -61,7 +61,7 @@ public class UserRoleServiceImp implements UserRoleService {
         UserRoleId id = new UserRoleId(userRoleDto.getUserId(), userRoleDto.getRoleId());
 
         if (userRoleRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ya existe un rol asignado para este usuario.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This user already already has an assigned role.");
         }
 
         UserRole userRole = UserRoleDataAdapter.toEntity(userRoleDto);

@@ -65,7 +65,7 @@ class RoleControllerTest {
 
     @Test
     void testFindById() throws Exception {
-        RoleDTO role = new RoleDTO(1L, "Admin",  "Description", 1742854217L);
+        RoleDTO role = new RoleDTO(1L, "Admin", "Description", 1742854217L);
         when(roleService.findById(1L)).thenReturn(role);
         mockMvc.perform(get("/roles/1"))
                 .andExpect(status().isOk())
@@ -78,8 +78,8 @@ class RoleControllerTest {
 
     @Test
     void testCreate() throws Exception {
-        RoleDTO role = new RoleDTO(null, "Admin",  "Description", 1742854217L);
-        RoleDTO createdRole = new RoleDTO(1L, "Admin",  "Description", 1742854217L);
+        RoleDTO role = new RoleDTO(null, "Admin", "Description", 1742854217L);
+        RoleDTO createdRole = new RoleDTO(1L, "Admin", "Description", 1742854217L);
         when(roleService.create(any(RoleDTO.class))).thenReturn(createdRole);
         mockMvc.perform(post("/roles")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -115,13 +115,15 @@ class RoleControllerTest {
 
     @Test
     void testDeleteById() throws Exception {
-        RoleDTO role = new RoleDTO(100L, "Admin", "Description", 1742854217L);
-        when(roleService.deleteById(100L)).thenReturn(role);
+        // BAD REQUEST: ID es null
+        RoleDTO nullRole = new RoleDTO(); // ID es null
+        when(roleService.deleteById(100L)).thenReturn(nullRole);
         mockMvc.perform(delete("/roles/100"))
                 .andExpect(status().isBadRequest());
-        
-        when(roleService.deleteById(200L)).thenReturn(role);
 
+        // OK: Valid role borrado
+        RoleDTO validRole = new RoleDTO(200L, "Admin", "Description", 1742854217L);
+        when(roleService.deleteById(200L)).thenReturn(validRole);
         mockMvc.perform(delete("/roles/200"))
                 .andExpect(status().isOk());
     }

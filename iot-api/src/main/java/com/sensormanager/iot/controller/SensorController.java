@@ -15,62 +15,60 @@ import java.util.List;
 public class SensorController {
 
 	@Autowired
-    private SensorService sensorService;
-	
+	private SensorService sensorService;
+
 	@GetMapping
-	public ResponseEntity<List<SensorDTO>> findAll(){
-		List<SensorDTO> SensorsDto = sensorService.findAll();
-		if(SensorsDto.isEmpty()){
-			return ResponseEntity.status(HttpStatus.NO_CONTENT.value()).body(SensorsDto);
+	public ResponseEntity<List<SensorDTO>> findAll() {
+		List<SensorDTO> sensorsDto = sensorService.findAll();
+		if (sensorsDto.isEmpty()) {
+			return ResponseEntity.noContent().build();
 		}
-		return ResponseEntity.status(HttpStatus.OK.value()).body(SensorsDto);
+		return ResponseEntity.ok(sensorsDto);
 	}
+
 
 	@GetMapping("/{id}")
 	public ResponseEntity<SensorDTO> findById(@PathVariable Long id) {
-		SensorDTO sensorDto = sensorService.findById(id);
-		if (sensorDto == null) {
+		SensorDTO sensorDTO = sensorService.findById(id);
+		if (sensorDTO.getId() == null) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The sensor ID: " + id + " does not exist.");
 		}
-		return ResponseEntity.ok(sensorDto);
+		return ResponseEntity.ok(sensorDTO);
 	}
-
-
 
 	@GetMapping("/company/{id}")
-	public ResponseEntity<List<SensorDTO>> findByCompanyId(@PathVariable Long id){
-		List<SensorDTO> SensorsDto = sensorService.findByCompany(id);
-		if(SensorsDto.isEmpty()){
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Company ID: " + id + "has no sensors.");
+	public ResponseEntity<List<SensorDTO>> findByCompanyId(@PathVariable Long id) {
+		List<SensorDTO> sensorDTOs = sensorService.findByCompany(id);
+		if (sensorDTOs.isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Company ID: " + id + " has no sensors.");
 		}
-		return ResponseEntity.status(HttpStatus.OK.value()).body(SensorsDto);
+		return ResponseEntity.ok(sensorDTOs);
 	}
 
-    @PostMapping
-    public ResponseEntity<SensorDTO> create(@RequestBody SensorDTO sensorDTO){
-		SensorDTO insertedSensor = sensorService.create(sensorDTO);
-        if(insertedSensor.getId() == null){
-        	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The sensor was not inserted.");
-        }
-        return ResponseEntity.status(HttpStatus.OK.value()).body(insertedSensor);
-    }
+	@PostMapping
+	public ResponseEntity<SensorDTO> create(@RequestBody SensorDTO sensorDTO) {
+		SensorDTO createdSensor = sensorService.create(sensorDTO);
+		if (createdSensor.getId() == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The sensor was not inserted.");
+		}
+		return ResponseEntity.ok(createdSensor);
+	}
 
-    @PutMapping
-    public ResponseEntity<SensorDTO> update(@RequestBody SensorDTO sensorDTO){
+	@PutMapping
+	public ResponseEntity<SensorDTO> update(@RequestBody SensorDTO sensorDTO) {
 		SensorDTO updatedSensor = sensorService.update(sensorDTO);
-        if(updatedSensor.getId() == null){
-        	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The sensor was not updated.");
-        }
-        return ResponseEntity.status(HttpStatus.OK.value()).body(updatedSensor);
-    }
+		if (updatedSensor.getId() == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The sensor was not updated.");
+		}
+		return ResponseEntity.ok(updatedSensor);
+	}
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<SensorDTO> deleteById(@PathVariable Long id){
+	@DeleteMapping("/{id}")
+	public ResponseEntity<SensorDTO> deleteById(@PathVariable Long id) {
 		SensorDTO deletedSensor = sensorService.deleteById(id);
-        if(deletedSensor.getId() == null){
-        	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The sensor was not disabled.");
-        }
-        return ResponseEntity.status(HttpStatus.OK.value()).body(deletedSensor);
-    }
-    
+		if (deletedSensor.getId() == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The sensor was not disabled.");
+		}
+		return ResponseEntity.ok(deletedSensor);
+	}
 }
