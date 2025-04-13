@@ -1,29 +1,31 @@
 package com.sensormanager.iot.controller;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.sensormanager.iot.dto.SensorJSONPackageDTO;
+import com.sensormanager.iot.dto.SensorDataDTO;
+import com.sensormanager.iot.service.SensorDataServiceImp;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-
-import static org.mockito.Mockito.*;
-
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 
-import com.sensormanager.iot.dto.SensorDataDTO;
-import com.sensormanager.iot.service.SensorDataService;
+import static org.mockito.Mockito.*;
 
 class SensorDataControllerTest {
 
     @Mock
-    private SensorDataService sensorDataService;
+    private SensorDataServiceImp sensorDataService;
 
     @InjectMocks
     private SensorDataController sensorDataController;
@@ -34,32 +36,22 @@ class SensorDataControllerTest {
     }
 
     @Test
-    void testGetAllSensorData() {
-        List<SensorDataDTO> mockData = Arrays.asList(new SensorDataDTO(), new SensorDataDTO());
-        when(sensorDataService.getAllSensorData()).thenReturn(mockData);
-        ResponseEntity<List<SensorDataDTO>> response = sensorDataController.getAllSensorData();
-        assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode());
-        assertEquals(mockData, response.getBody());
-        verify(sensorDataService, times(1)).getAllSensorData();
-    }
+    void testGetSensorData() {
+        List<Long> sensorIds = List.of(1L, 2L);
+        Long fromEpoch = 1742861430L;
+        Long toEpoch = 1742861495L;
 
-    @Test
-    void testGetSensorDataById_Found() {
-        SensorDataDTO mockData = new SensorDataDTO();
-        when(sensorDataService.getSensorDataById(1L)).thenReturn(mockData);
-        ResponseEntity<SensorDataDTO> response = sensorDataController.getSensorDataById(1L);
-        assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode());
-        assertEquals(mockData, response.getBody());
-        verify(sensorDataService, times(1)).getSensorDataById(1L);
-    }
+        List<SensorDataDTO> mockData = List.of(
+                SensorDataDTO.builder().id(1L).idSensor(1L).metric("temp").record("24.4").recordCreatedAt(1742861430L).build()
+        );
 
-    @Test
-    void testGetSensorDataById_NotFound() {
-        when(sensorDataService.getSensorDataById(1L)).thenReturn(null);
-        ResponseEntity<SensorDataDTO> response = sensorDataController.getSensorDataById(1L);
-        assertEquals(HttpStatusCode.valueOf(404), response.getStatusCode());
-        assertNull(response.getBody());
-        verify(sensorDataService, times(1)).getSensorDataById(1L);
+        when(sensorDataService.getSensorData(sensorIds, fromEpoch, toEpoch)).thenReturn(mockData);
+
+        ResponseEntity<List<SensorDataDTO>> response = sensorDataController.getSensorData(sensorIds, fromEpoch, toEpoch);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(mockData, response.getBody());
+        verify(sensorDataService, times(1)).getSensorData(sensorIds, fromEpoch, toEpoch);
     }
 
     @Test
@@ -83,39 +75,10 @@ class SensorDataControllerTest {
 
         ResponseEntity<List<SensorDataDTO>> response = sensorDataController.createSensorData(input);
 
-        assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode());
+        assertEquals(HttpStatusCode.valueOf(201), response.getStatusCode());
         assertEquals(4, response.getBody().size());
         verify(sensorDataService, times(1)).createSensorData(input);
     }
 
-
-    @Test
-    void testUpdateSensorData_Found() {
-        SensorDataDTO inputData = new SensorDataDTO();
-        SensorDataDTO mockData = new SensorDataDTO();
-        when(sensorDataService.updateSensorData(1L, inputData)).thenReturn(mockData);
-        ResponseEntity<SensorDataDTO> response = sensorDataController.updateSensorData(1L, inputData);
-        assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode());
-        assertEquals(mockData, response.getBody());
-        verify(sensorDataService, times(1)).updateSensorData(1L, inputData);
-    }
-
-    @Test
-    void testUpdateSensorData_NotFound() {
-        SensorDataDTO inputData = new SensorDataDTO();
-        when(sensorDataService.updateSensorData(1L, inputData)).thenReturn(null);
-        ResponseEntity<SensorDataDTO> response = sensorDataController.updateSensorData(1L, inputData);
-        assertEquals(HttpStatusCode.valueOf(404), response.getStatusCode());
-        assertNull(response.getBody());
-        verify(sensorDataService, times(1)).updateSensorData(1L, inputData);
-    }
-
-    @Test
-    void testDeleteSensorData() {
-        doNothing().when(sensorDataService).deleteSensorData(1L);
-        ResponseEntity<Void> response = sensorDataController.deleteSensorData(1L);
-        assertEquals(HttpStatusCode.valueOf(204), response.getStatusCode());
-        assertNull(response.getBody());
-        verify(sensorDataService, times(1)).deleteSensorData(1L);
-    }
 }
+

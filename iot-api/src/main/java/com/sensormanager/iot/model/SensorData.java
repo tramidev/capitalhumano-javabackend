@@ -32,8 +32,4 @@ public class SensorData {
     @Column(name = "record_created_at", nullable = false)
     private Long recordCreatedAt;
 
-    @PrePersist
-    protected void onCreate() {
-        this.recordCreatedAt = Instant.now().getEpochSecond();
-    }
 }

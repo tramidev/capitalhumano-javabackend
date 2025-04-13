@@ -2,12 +2,11 @@ package com.sensormanager.iot.controller;
 
 import com.sensormanager.iot.dto.SensorDataDTO;
 import com.sensormanager.iot.dto.SensorJSONPackageDTO;
-import com.sensormanager.iot.service.SensorDataService;
+import com.sensormanager.iot.service.SensorDataServiceImp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.format.annotation.DateTimeFormat;
-import java.time.LocalDateTime;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
 import java.util.List;
@@ -16,45 +15,27 @@ import java.util.List;
 @RequestMapping("/api/v1/sensordata")
 public class SensorDataController {
 
-    private final SensorDataService sensorDataService;
+	@Autowired
+    private SensorDataServiceImp sensorDataService;
 
-    @Autowired
-    public SensorDataController(SensorDataService sensorDataService) {
-        this.sensorDataService = sensorDataService;
-    }
-
-    // Obtener todos los datos de sensores
     @GetMapping
-    public ResponseEntity<List<SensorDataDTO>> getAllSensorData() {
-        List<SensorDataDTO> sensorDataList = sensorDataService.getAllSensorData();
-        return ResponseEntity.ok(sensorDataList);
+    public ResponseEntity<List<SensorDataDTO>> getSensorData(@RequestParam("sensor_id") List<Long> sensorIds,
+    														 @RequestParam("from") Long fromEpoch,
+												             @RequestParam("to") Long toEpoch) {
+        List<SensorDataDTO> sensorDataList = sensorDataService.getSensorData(sensorIds, fromEpoch, toEpoch);
+        if(sensorDataList.size() == 0){
+            return ResponseEntity.status(HttpStatus.NO_CONTENT.value()).body(sensorDataList);
+        }
+        return ResponseEntity.status(HttpStatus.OK.value()).body(sensorDataList);
     }
 
-    // Obtener datos de un sensor por ID
-    @GetMapping("/{id}")
-    public ResponseEntity<SensorDataDTO> getSensorDataById(@PathVariable Long id) {
-        SensorDataDTO sensorDataDTO = sensorDataService.getSensorDataById(id);
-        return (sensorDataDTO != null) ? ResponseEntity.ok(sensorDataDTO) : ResponseEntity.notFound().build();
-    }
-
-    // Crear un nuevo registro de sensor
     @PostMapping
     public ResponseEntity<List<SensorDataDTO>> createSensorData(@RequestBody SensorJSONPackageDTO sensorDataDTO) {
         List<SensorDataDTO> createdSensorData = sensorDataService.createSensorData(sensorDataDTO);
-        return ResponseEntity.ok(createdSensorData);
+        if(createdSensorData == null || createdSensorData.size() == 0){
+        	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The data was not inserted.");
+        }
+        return ResponseEntity.status(HttpStatus.CREATED.value()).body(createdSensorData);
     }
-
-    // Actualizar datos de un sensor
-    @PutMapping("/{id}")
-    public ResponseEntity<SensorDataDTO> updateSensorData(@PathVariable Long id, @RequestBody SensorDataDTO sensorDataDTO) {
-        SensorDataDTO updatedSensorData = sensorDataService.updateSensorData(id, sensorDataDTO);
-        return (updatedSensorData != null) ? ResponseEntity.ok(updatedSensorData) : ResponseEntity.notFound().build();
-    }
-
-    // Eliminar un registro de sensor
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSensorData(@PathVariable Long id) {
-        sensorDataService.deleteSensorData(id);
-        return ResponseEntity.noContent().build();
-    }
+    
 }
