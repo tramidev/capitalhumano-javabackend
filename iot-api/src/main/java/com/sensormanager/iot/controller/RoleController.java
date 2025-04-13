@@ -1,23 +1,15 @@
 package com.sensormanager.iot.controller;
 
-import java.util.List;
-
+import com.sensormanager.iot.dto.RoleDTO;
+import com.sensormanager.iot.service.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
-import com.sensormanager.iot.dto.RoleDTO;
-import com.sensormanager.iot.service.RoleService;
+import java.util.List;
 
-@Controller
+@RestController
 @RequestMapping("/roles")
 public class RoleController {
 
@@ -37,36 +29,35 @@ public class RoleController {
     public ResponseEntity<RoleDTO> findById(@PathVariable Long id) {
         RoleDTO roleDto = roleService.findById(id);
         if (roleDto.getId() == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND.value()).body(roleDto);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(roleDto);
         }
-        return ResponseEntity.status(HttpStatus.OK.value()).body(roleDto);
+        return ResponseEntity.ok(roleDto);
     }
 
     @PostMapping
     public ResponseEntity<RoleDTO> create(@RequestBody RoleDTO roleDto) {
         RoleDTO newRole = roleService.create(roleDto);
         if (newRole.getId() == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(newRole);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(newRole);
         }
-        return ResponseEntity.status(HttpStatus.OK.value()).body(newRole);
+        return ResponseEntity.ok(newRole);
     }
 
     @PutMapping
-    public ResponseEntity<RoleDTO> update(@RequestBody RoleDTO roleDTO) {
-        RoleDTO roleUpdate = roleService.update(roleDTO);
-        if (roleUpdate.getId() == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND.value()).body(roleUpdate);
+    public ResponseEntity<RoleDTO> update(@RequestBody RoleDTO roleDto) {
+        RoleDTO updated = roleService.update(roleDto);
+        if (updated.getId() == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(updated);
         }
-        return ResponseEntity.status(HttpStatus.OK.value()).body(roleUpdate);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<RoleDTO> deleteById(@PathVariable Long id) {
-        RoleDTO deleteRole = roleService.deleteById(id);
-        if (deleteRole.getId().equals(id)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(deleteRole);
+        RoleDTO deleted = roleService.deleteById(id);
+        if (deleted.getId() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(deleted);
         }
-        return ResponseEntity.status(HttpStatus.OK.value()).body(deleteRole);
+        return ResponseEntity.ok(deleted);
     }
-
 }

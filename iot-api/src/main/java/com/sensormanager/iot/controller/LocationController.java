@@ -19,47 +19,46 @@ public class LocationController {
 
     @GetMapping
     public ResponseEntity<List<LocationDTO>> findAll() {
-        List<LocationDTO> locationsDto = locationService.findAll();
-        if (locationsDto.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT.value()).body(locationsDto);
+        List<LocationDTO> locationDTOs = locationService.findAll();
+        if (locationDTOs.isEmpty()) {
+            return ResponseEntity.noContent().build();
         }
-        return ResponseEntity.status(HttpStatus.OK.value()).body(locationsDto);
+        return ResponseEntity.ok(locationDTOs);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<LocationDTO> findById(@PathVariable Long id) {
-        LocationDTO locationDto = locationService.findById(id);
-        if (locationDto == null) {
-        	throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The location ID: " + id + " does not exist.");
+        LocationDTO locationDTO = locationService.findById(id);
+        if (locationDTO.getId() == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The location ID: " + id + " does not exist.");
         }
-        return ResponseEntity.status(HttpStatus.OK).body(locationDto);
+        return ResponseEntity.ok(locationDTO);
     }
 
-
     @PostMapping
-    public ResponseEntity<LocationDTO> create(@RequestBody LocationDTO locationDto) {
-        LocationDTO locationInserted = locationService.create(locationDto);
-        if (locationInserted.getId() == null) {
-        	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The location was not inserted.");
+    public ResponseEntity<LocationDTO> create(@RequestBody LocationDTO locationDTO) {
+        LocationDTO insertedLocationDTO = locationService.create(locationDTO);
+        if (insertedLocationDTO.getId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The location was not inserted.");
         }
-        return ResponseEntity.status(HttpStatus.OK.value()).body(locationInserted);
+        return ResponseEntity.ok(insertedLocationDTO);
     }
 
     @PutMapping
-    public ResponseEntity<LocationDTO> update(@RequestBody LocationDTO locationDto) {
-        LocationDTO locationUpdated = locationService.update(locationDto);
-        if (locationUpdated.getId() == null) {
-        	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The location was not updated.");
+    public ResponseEntity<LocationDTO> update(@RequestBody LocationDTO locationDTO) {
+        LocationDTO updatedLocationDTO = locationService.update(locationDTO);
+        if (updatedLocationDTO.getId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The location was not updated.");
         }
-        return ResponseEntity.status(HttpStatus.OK.value()).body(locationUpdated);
+        return ResponseEntity.ok(updatedLocationDTO);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<LocationDTO> deleteById(@PathVariable Long id) {
-        LocationDTO locationDeleted = locationService.deleteById(id);
-        if (locationDeleted.getId() == null) {
-        	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The location was not disabled.");
+        LocationDTO deletedLocationDTO = locationService.deleteById(id);
+        if (deletedLocationDTO.getId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The location was not disabled.");
         }
-        return ResponseEntity.status(HttpStatus.OK.value()).body(locationDeleted);
+        return ResponseEntity.ok(deletedLocationDTO);
     }
 }

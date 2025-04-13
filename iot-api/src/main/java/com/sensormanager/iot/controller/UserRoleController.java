@@ -1,23 +1,14 @@
 package com.sensormanager.iot.controller;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-
 import com.sensormanager.iot.dto.UserRoleDTO;
 import com.sensormanager.iot.service.UserRoleService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
 
-@Controller
+import java.util.List;
+
+@RestController
 @RequestMapping("/user-role")
 public class UserRoleController {
 
@@ -33,40 +24,29 @@ public class UserRoleController {
         return ResponseEntity.ok(userRoles);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<UserRoleDTO> findByUserId(@PathVariable Integer id) {
-        UserRoleDTO userRoleDto = userRoleService.findByUserId(id);
-        if (userRoleDto.getUserId() == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND.value()).body(userRoleDto);
-        }
-        return ResponseEntity.status(HttpStatus.OK.value()).body(userRoleDto);
+    // Solo requiere userId, ya que solo hay un rol por usuario
+    @GetMapping("/{userId}")
+    public ResponseEntity<UserRoleDTO> findByUserId(@PathVariable Integer userId) {
+        UserRoleDTO dto = userRoleService.findByUserId(userId);
+        return ResponseEntity.ok(dto);
     }
 
     @PostMapping
     public ResponseEntity<UserRoleDTO> create(@RequestBody UserRoleDTO userRoleDto) {
         UserRoleDTO newUserRole = userRoleService.create(userRoleDto);
-        if (newUserRole.getUserId() == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(newUserRole);
-        }
-        return ResponseEntity.status(HttpStatus.OK.value()).body(newUserRole);
+        return ResponseEntity.status(HttpStatus.CREATED).body(newUserRole);
     }
 
     @PutMapping
-    public ResponseEntity<UserRoleDTO> update(@RequestBody UserRoleDTO userRoleDTO) {
-        UserRoleDTO userRoleUpdate = userRoleService.update(userRoleDTO);
-        if (userRoleUpdate.getUserId() == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND.value()).body(userRoleUpdate);
-        }
-        return ResponseEntity.status(HttpStatus.OK.value()).body(userRoleUpdate);
+    public ResponseEntity<UserRoleDTO> update(@RequestBody UserRoleDTO userRoleDto) {
+        UserRoleDTO updated = userRoleService.update(userRoleDto);
+        return ResponseEntity.ok(updated);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<UserRoleDTO> deleteByUserId(@PathVariable Integer id) {
-        UserRoleDTO deleteUserRole = userRoleService.deleteById(id);
-        if (deleteUserRole.getUserId().equals(id)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(deleteUserRole);
-        }
-        return ResponseEntity.status(HttpStatus.OK.value()).body(deleteUserRole);
+    // Eliminamos por userId (porque se asume un solo rol por usuario)
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<UserRoleDTO> deleteByUserId(@PathVariable Integer userId) {
+        UserRoleDTO deleted = userRoleService.deleteById(userId);
+        return ResponseEntity.ok(deleted);
     }
-
 }

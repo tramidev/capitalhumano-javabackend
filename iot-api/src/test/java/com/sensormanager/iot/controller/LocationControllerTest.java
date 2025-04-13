@@ -1,23 +1,20 @@
 package com.sensormanager.iot.controller;
 
+import com.sensormanager.iot.dto.LocationDTO;
+import com.sensormanager.iot.service.LocationService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.ResponseEntity;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import org.mockito.MockitoAnnotations;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
-
-import com.sensormanager.iot.dto.LocationDTO;
-import com.sensormanager.iot.service.LocationService;
+import static org.mockito.Mockito.*;
 
 class LocationControllerTest {
 
@@ -32,15 +29,18 @@ class LocationControllerTest {
         MockitoAnnotations.openMocks(this);
     }
 
-    @SuppressWarnings("null")
     @Test
     void testFindAll_ReturnsLocations() {
-        List<LocationDTO> locations = Arrays.asList(
-            new LocationDTO(1L, "Location1","EEUU","Los Angeles","Street","1222",true,1743172352L,1L), 
-            new LocationDTO(2L, "Location2", "EEUU","Los Angeles","Street","1222",true,1743172352L,1L));
-        when(locationService.findAll()).thenReturn(locations);
+        List<LocationDTO> locationDTOs = Arrays.asList(
+                new LocationDTO(1L, "Location1", "USA", "LA", "Street", "123", true, 1743172352L, 1L),
+                new LocationDTO(2L, "Location2", "USA", "NY", "Avenue", "456", true, 1743172352L, 1L)
+        );
+
+        when(locationService.findAll()).thenReturn(locationDTOs);
+
         ResponseEntity<List<LocationDTO>> response = locationController.findAll();
-        assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode());
+
+        assertEquals(200, response.getStatusCodeValue());
         assertEquals(2, response.getBody().size());
         verify(locationService, times(1)).findAll();
     }
@@ -48,89 +48,103 @@ class LocationControllerTest {
     @Test
     void testFindAll_ReturnsNoContent() {
         when(locationService.findAll()).thenReturn(Collections.emptyList());
+
         ResponseEntity<List<LocationDTO>> response = locationController.findAll();
-        assertEquals(HttpStatusCode.valueOf(204), response.getStatusCode());
+
+        assertEquals(204, response.getStatusCodeValue());
         verify(locationService, times(1)).findAll();
     }
 
-    @SuppressWarnings("null")
     @Test
     void testFindById_ReturnsLocation() {
-        LocationDTO location = new LocationDTO(1L, "Location1","EEUU","Los Angeles","Street","1222",true,1743172352L,1L);
-        when(locationService.findById(1L)).thenReturn(location);
+        LocationDTO locationDTO = new LocationDTO(1L, "Location1", "USA", "LA", "Street", "123", true, 1743172352L, 1L);
+        when(locationService.findById(1L)).thenReturn(locationDTO);
+
         ResponseEntity<LocationDTO> response = locationController.findById(1L);
-        assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode());
+
+        assertEquals(200, response.getStatusCodeValue());
         assertEquals(1L, response.getBody().getId());
         verify(locationService, times(1)).findById(1L);
     }
 
     @Test
     void testFindById_ReturnsNotFound() {
-        LocationDTO location = new LocationDTO();
-        when(locationService.findById(1L)).thenReturn(location);
+        when(locationService.findById(1L)).thenReturn(new LocationDTO());
+
         ResponseEntity<LocationDTO> response = locationController.findById(1L);
-        assertEquals(HttpStatusCode.valueOf(404), response.getStatusCode());
+
+        assertEquals(404, response.getStatusCodeValue());
         verify(locationService, times(1)).findById(1L);
     }
 
-    @SuppressWarnings("null")
     @Test
     void testCreate_ReturnsCreatedLocation() {
-        LocationDTO location = new LocationDTO(null, "New Location","EEUU","Los Angeles","Street","1222",true,1743172352L,1L);
-        LocationDTO createdLocation = new LocationDTO(1L, "New Location","Canada","Canada","Street","1222",true,1743172352L,1L);
-        when(locationService.create(location)).thenReturn(createdLocation);
-        ResponseEntity<LocationDTO> response = locationController.create(location);
-        assertEquals( HttpStatusCode.valueOf(200)  , response.getStatusCode());
+        LocationDTO requestDTO = new LocationDTO(null, "New Location", "USA", "LA", "Street", "123", true, 1743172352L, 1L);
+        LocationDTO responseDTO = new LocationDTO(1L, "New Location", "USA", "LA", "Street", "123", true, 1743172352L, 1L);
+
+        when(locationService.create(requestDTO)).thenReturn(responseDTO);
+
+        ResponseEntity<LocationDTO> response = locationController.create(requestDTO);
+
+        assertEquals(200, response.getStatusCodeValue());
         assertEquals(1L, response.getBody().getId());
-        verify(locationService, times(1)).create(location);
+        verify(locationService, times(1)).create(requestDTO);
     }
 
     @Test
     void testCreate_ReturnsBadRequest() {
-        LocationDTO location = new LocationDTO(null, "Invalid Location", "EEUU","Los Angeles","Street","1222",true,1743172352L,1L);
-        when(locationService.create(location)).thenReturn(location);
-        ResponseEntity<LocationDTO> response = locationController.create(location);
-        assertEquals( HttpStatusCode.valueOf(400), response.getStatusCode());
-        verify(locationService, times(1)).create(location);
+        LocationDTO requestDTO = new LocationDTO();
+        when(locationService.create(requestDTO)).thenReturn(requestDTO);
+
+        ResponseEntity<LocationDTO> response = locationController.create(requestDTO);
+
+        assertEquals(400, response.getStatusCodeValue());
+        verify(locationService, times(1)).create(requestDTO);
     }
 
-    @SuppressWarnings("null")
     @Test
     void testUpdate_ReturnsUpdatedLocation() {
-        LocationDTO location = new LocationDTO(1L, "Updated Location","EEUU","Los Angeles","Street","1222",true,1743172352L,1L);
-        when(locationService.update(location)).thenReturn(location);
-        ResponseEntity<LocationDTO> response = locationController.update(location);
-        assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode());
+        LocationDTO locationDTO = new LocationDTO(1L, "Updated", "USA", "NY", "Avenue", "456", true, 1743172352L, 1L);
+        when(locationService.update(locationDTO)).thenReturn(locationDTO);
+
+        ResponseEntity<LocationDTO> response = locationController.update(locationDTO);
+
+        assertEquals(200, response.getStatusCodeValue());
         assertEquals(1L, response.getBody().getId());
-        verify(locationService, times(1)).update(location);
+        verify(locationService, times(1)).update(locationDTO);
     }
 
     @Test
     void testUpdate_ReturnsBadRequest() {
-        LocationDTO location = new LocationDTO(null, "Invalid Location","EEUU","Los Angeles","Street","1222",true,1743172352L,1L);
-        when(locationService.update(location)).thenReturn(location);
-        ResponseEntity<LocationDTO> response = locationController.update(location);
-        assertEquals(HttpStatusCode.valueOf(400), response.getStatusCode());
-        verify(locationService, times(1)).update(location);
+        LocationDTO invalidDTO = new LocationDTO();
+        when(locationService.update(invalidDTO)).thenReturn(invalidDTO);
+
+        ResponseEntity<LocationDTO> response = locationController.update(invalidDTO);
+
+        assertEquals(400, response.getStatusCodeValue());
+        verify(locationService, times(1)).update(invalidDTO);
     }
 
-    @SuppressWarnings("null")
     @Test
     void testDeleteById_ReturnsDeletedLocation() {
-        LocationDTO location = new LocationDTO(1L, "Deleted Location","EEUU","Los Angeles","Street","1222",true,1743172352L,1L);
-        when(locationService.deleteById(1L)).thenReturn(location);
+        LocationDTO locationDTO = new LocationDTO(1L, "Deleted", "USA", "LA", "Street", "123", true, 1743172352L, 1L);
+        when(locationService.deleteById(1L)).thenReturn(locationDTO);
+
         ResponseEntity<LocationDTO> response = locationController.deleteById(1L);
-        assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode());
+
+        assertEquals(200, response.getStatusCodeValue());
         assertEquals(1L, response.getBody().getId());
         verify(locationService, times(1)).deleteById(1L);
     }
 
     @Test
     void testDeleteById_ReturnsBadRequest() {
-        LocationDTO location = new LocationDTO();
-        when(locationService.deleteById(1L)).thenReturn(location);
+        LocationDTO emptyDTO = new LocationDTO();
+        when(locationService.deleteById(1L)).thenReturn(emptyDTO);
+
         ResponseEntity<LocationDTO> response = locationController.deleteById(1L);
-        assertEquals(HttpStatusCode.valueOf(400), response.getStatusCode());
+
+        assertEquals(400, response.getStatusCodeValue());
         verify(locationService, times(1)).deleteById(1L);
     }
 }

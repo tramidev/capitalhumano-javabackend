@@ -9,14 +9,10 @@ import com.sensormanager.iot.repository.CompanyRepository;
 import com.sensormanager.iot.repository.LocationRepository;
 import com.sensormanager.iot.repository.SensorRepository;
 import com.sensormanager.iot.security.AuthenticatedService;
-import com.sensormanager.iot.security.CustomUserSecurity;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,31 +31,29 @@ public class LocationServiceImp implements LocationService {
     @Autowired
     private AuthenticatedService authenticatedService;
 
-
     @Override
     public List<LocationDTO> findAll() {
         if (authenticatedService.isRootUser()) {
             return locationRepository.findByLocationStatusTrue()
                     .stream().map(LocationDataAdapter::toDTO).collect(Collectors.toList());
-        } else {
-            CustomUserSecurity user = authenticatedService.getAuthenticatedUser();
-            return locationRepository.findByCompanyAndLocationStatusTrue(user.getCompany())
-                    .stream().map(LocationDataAdapter::toDTO).collect(Collectors.toList());
         }
+
+        Company company = authenticatedService.getAuthenticatedCompany();
+        return locationRepository.findByCompanyAndLocationStatusTrue(company)
+                .stream().map(LocationDataAdapter::toDTO).collect(Collectors.toList());
     }
 
     @Override
     public LocationDTO findById(Long id) {
         if (authenticatedService.isRootUser()) {
             return locationRepository.findByIdAndLocationStatusTrue(id)
-                    .map(LocationDataAdapter::toDTO).orElse(null);
-        } else {
-            CustomUserSecurity user = authenticatedService.getAuthenticatedUser();
-            return locationRepository.findByIdAndLocationStatusTrueAndCompany(id, user.getCompany())
-                    .map(LocationDataAdapter::toDTO).orElse(null);
+                    .map(LocationDataAdapter::toDTO).orElse(new LocationDTO());
         }
-    }
 
+        Company company = authenticatedService.getAuthenticatedCompany();
+        return locationRepository.findByIdAndLocationStatusTrueAndCompany(id, company)
+                .map(LocationDataAdapter::toDTO).orElse(new LocationDTO());
+    }
 
     @Override
     public LocationDTO create(LocationDTO locationDTO) {
@@ -68,8 +62,7 @@ public class LocationServiceImp implements LocationService {
         if (authenticatedService.isRootUser()) {
             company = companyRepository.findById(locationDTO.getCompanyId()).orElse(null);
         } else {
-            CustomUserSecurity user = authenticatedService.getAuthenticatedUser();
-            company = companyRepository.findById(user.getCompany().getId()).orElse(null);
+            company = authenticatedService.getAuthenticatedCompany();
         }
 
         if (company == null) return new LocationDTO();
@@ -84,57 +77,50 @@ public class LocationServiceImp implements LocationService {
 
     @Override
     public LocationDTO update(LocationDTO locationDTO) {
-        Location locationToUpdate = locationRepository.findByIdAndLocationStatusTrue(locationDTO.getId()).orElse(null);
-        if (locationToUpdate == null) return new LocationDTO();
+        Location location = locationRepository.findByIdAndLocationStatusTrue(locationDTO.getId()).orElse(null);
+        if (location == null) return new LocationDTO();
 
-        if (!authenticatedService.isRootUser()) {
-            CustomUserSecurity user = authenticatedService.getAuthenticatedUser();
-            if (!locationToUpdate.getCompany().getId().equals(user.getCompany().getId())) return new LocationDTO();
+        if (!authenticatedService.isRootUser() &&
+                !location.getCompany().getId().equals(authenticatedService.getUserCompanyId())) {
+            return new LocationDTO();
         }
 
-        locationToUpdate.setLocationName(locationDTO.getLocationName() != null ? locationDTO.getLocationName() : locationToUpdate.getLocationName());
-        locationToUpdate.setLocationCity(locationDTO.getLocationCity() != null ? locationDTO.getLocationCity() : locationToUpdate.getLocationCity());
-        locationToUpdate.setLocationCountry(locationDTO.getLocationCountry() != null ? locationDTO.getLocationCountry() : locationToUpdate.getLocationCountry());
-        locationToUpdate.setLocationStreet(locationDTO.getLocationStreet() != null ? locationDTO.getLocationStreet() : locationToUpdate.getLocationStreet());
-        locationToUpdate.setLocationNumber(locationDTO.getLocationNumber() != null ? locationDTO.getLocationNumber() : locationToUpdate.getLocationNumber());
-        locationToUpdate.setLocationStatus(locationDTO.getLocationStatus() != null ? locationDTO.getLocationStatus() : locationToUpdate.getLocationStatus());
+        location.setLocationName(locationDTO.getLocationName() != null ? locationDTO.getLocationName() : location.getLocationName());
+        location.setLocationCity(locationDTO.getLocationCity() != null ? locationDTO.getLocationCity() : location.getLocationCity());
+        location.setLocationCountry(locationDTO.getLocationCountry() != null ? locationDTO.getLocationCountry() : location.getLocationCountry());
+        location.setLocationStreet(locationDTO.getLocationStreet() != null ? locationDTO.getLocationStreet() : location.getLocationStreet());
+        location.setLocationNumber(locationDTO.getLocationNumber() != null ? locationDTO.getLocationNumber() : location.getLocationNumber());
+        location.setLocationStatus(locationDTO.getLocationStatus() != null ? locationDTO.getLocationStatus() : location.getLocationStatus());
 
-        Location locationUpdated = locationRepository.save(locationToUpdate);
-        return locationUpdated != null ? LocationDataAdapter.toDTO(locationUpdated) : new LocationDTO();
+        Location updated = locationRepository.save(location);
+        return updated != null ? LocationDataAdapter.toDTO(updated) : new LocationDTO();
     }
-
 
     @Override
     public LocationDTO deleteById(Long id) {
         Location location = locationRepository.findById(id).orElse(null);
-        if (location == null) {
+        if (location == null) return new LocationDTO();
+
+        if (!authenticatedService.isRootUser() &&
+                !location.getCompany().getId().equals(authenticatedService.getUserCompanyId())) {
             return new LocationDTO();
         }
 
-        if (!authenticatedService.isRootUser()) {
-            CustomUserSecurity user = authenticatedService.getAuthenticatedUser();
-            if (!location.getCompany().getId().equals(user.getCompany().getId())) {
-                return new LocationDTO();
-            }
-        }
-
-        // Desactivar sensores asociados
-        List<Sensor> sensores = sensorRepository.findBySensorLocation(location);
-        sensores.forEach(sensor -> {
+        // Desactivar sensores
+        List<Sensor> sensors = sensorRepository.findBySensorLocation(location);
+        sensors.forEach(sensor -> {
             sensor.setSensorStatus(false);
             sensorRepository.save(sensor);
         });
 
-        // Desactivar la ubicación
+        // Desactivar locations
         location.setLocationStatus(false);
         Location saved = locationRepository.save(location);
 
-        if (saved == null || saved.getLocationStatus()) {
+        if (saved == null || Boolean.TRUE.equals(saved.getLocationStatus())) {
             throw new RuntimeException("The location was not disabled.");
         }
 
         return LocationDataAdapter.toDTO(saved);
     }
 }
-
-

@@ -7,13 +7,13 @@ import com.sensormanager.iot.model.Sensor;
 import com.sensormanager.iot.repository.CompanyRepository;
 import com.sensormanager.iot.repository.SensorRepository;
 import com.sensormanager.iot.security.AuthenticatedService;
-import com.sensormanager.iot.security.CustomUserSecurity;
 import com.sensormanager.iot.utils.GenerateApiKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,25 +30,23 @@ public class SensorServiceImp implements SensorService {
 
     @Override
     public List<SensorDTO> findAll() {
-        List<Sensor> sensors;
-        if (authenticatedService.isRootUser()) {
-            sensors = sensorRepository.findBySensorStatusTrue();
-        } else {
-            Company company = authenticatedService.getAuthenticatedCompany();
-            sensors = sensorRepository.findBySensorCompanyAndSensorStatusTrue(company);
+        List<Sensor> sensors = authenticatedService.isRootUser()
+                ? sensorRepository.findBySensorStatusTrue()
+                : sensorRepository.findBySensorCompanyAndSensorStatusTrue(authenticatedService.getAuthenticatedCompany());
 
-        }
-        if (sensors == null) return new ArrayList<>();
-        return sensors.stream().map(SensorDataAdapter::toDTO).collect(Collectors.toList());
+        return sensors.stream()
+                .map(SensorDataAdapter::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     public SensorDTO findById(Long id) {
-        Sensor sensor = sensorRepository.findByIdAndSensorStatusTrue(id).orElse(null);
-        if (sensor == null) return null;
+        Optional<Sensor> optSensor = sensorRepository.findByIdAndSensorStatusTrue(id);
+        if (optSensor.isEmpty()) return new SensorDTO();
 
-        if (!authenticatedService.isRootUser() &&
-                !sensor.getSensorCompany().getId().equals(authenticatedService.getAuthenticatedCompany().getId())) {
+        Sensor sensor = optSensor.get();
+        if (!authenticatedService.isRootUser()
+                && !sensor.getSensorCompany().getId().equals(authenticatedService.getUserCompanyId())) {
             return new SensorDTO();
         }
 
@@ -57,31 +55,34 @@ public class SensorServiceImp implements SensorService {
 
     @Override
     public List<SensorDTO> findByCompany(Long companyId) {
-        Company company = companyRepository.findById(companyId).orElse(null);
-        if (company == null) return new ArrayList<>();
+        Optional<Company> optCompany = companyRepository.findById(companyId);
+        if (optCompany.isEmpty()) return Collections.emptyList();
 
-        if (!authenticatedService.isRootUser() &&
-                !company.getId().equals(authenticatedService.getAuthenticatedCompany().getId())) {
-            return new ArrayList<>();
+        Company company = optCompany.get();
+        if (!authenticatedService.isRootUser()
+                && !company.getId().equals(authenticatedService.getUserCompanyId())) {
+            return Collections.emptyList();
         }
 
-        List<Sensor> sensors = sensorRepository.findBySensorCompanyAndSensorStatusTrue(company);
-        if (sensors == null) return new ArrayList<>();
-        return sensors.stream().map(SensorDataAdapter::toDTO).collect(Collectors.toList());
+        return sensorRepository.findBySensorCompanyAndSensorStatusTrue(company)
+                .stream()
+                .map(SensorDataAdapter::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     public SensorDTO create(SensorDTO sensorDTO) {
+
         if (sensorRepository.existsBySensorName(sensorDTO.getSensorName())) {
             return new SensorDTO();
         }
 
-        Company company;
-        if (authenticatedService.isRootUser()) {
-            company = companyRepository.findById(sensorDTO.getSensorCompany()).orElse(null);
-            if (company == null) return new SensorDTO();
-        } else {
-            company = authenticatedService.getAuthenticatedCompany();
+        Company company = authenticatedService.isRootUser()
+                ? companyRepository.findById(sensorDTO.getSensorCompany()).orElse(null)
+                : authenticatedService.getAuthenticatedCompany();
+
+        if (company == null) {
+            return new SensorDTO();
         }
 
         sensorDTO.setSensorApiKey(GenerateApiKey.generate(sensorDTO.getSensorName()));
@@ -90,18 +91,25 @@ public class SensorServiceImp implements SensorService {
 
         Sensor sensor = SensorDataAdapter.toEntity(sensorDTO);
         sensor.setSensorCompany(company);
-        Sensor sensorAdded = sensorRepository.save(sensor);
 
-        return sensorAdded != null ? SensorDataAdapter.toDTO(sensorAdded) : new SensorDTO();
+        Sensor sensorSaved = sensorRepository.save(sensor);
+
+        if (sensorSaved == null) {
+            return new SensorDTO();
+        }
+
+        return SensorDataAdapter.toDTO(sensorSaved);
     }
 
     @Override
     public SensorDTO update(SensorDTO sensorDTO) {
-        Sensor sensor = sensorRepository.findById(sensorDTO.getId()).orElse(null);
-        if (sensor == null) return new SensorDTO();
+        Optional<Sensor> optSensor = sensorRepository.findById(sensorDTO.getId());
+        if (optSensor.isEmpty()) return new SensorDTO();
 
-        if (!authenticatedService.isRootUser() &&
-                !sensor.getSensorCompany().getId().equals(authenticatedService.getAuthenticatedCompany().getId())) {
+        Sensor sensor = optSensor.get();
+
+        if (!authenticatedService.isRootUser()
+                && !sensor.getSensorCompany().getId().equals(authenticatedService.getUserCompanyId())) {
             return new SensorDTO();
         }
 
@@ -118,17 +126,18 @@ public class SensorServiceImp implements SensorService {
 
     @Override
     public SensorDTO deleteById(Long id) {
-        Sensor sensor = sensorRepository.findById(id).orElse(null);
-        if (sensor == null) return new SensorDTO();
+        Optional<Sensor> optSensor = sensorRepository.findById(id);
+        if (optSensor.isEmpty()) return new SensorDTO();
 
-        if (!authenticatedService.isRootUser() &&
-                !sensor.getSensorCompany().getId().equals(authenticatedService.getAuthenticatedCompany().getId())) {
+        Sensor sensor = optSensor.get();
+
+        if (!authenticatedService.isRootUser()
+                && !sensor.getSensorCompany().getId().equals(authenticatedService.getUserCompanyId())) {
             return new SensorDTO();
         }
 
         sensor.setSensorStatus(false);
         Sensor sensorDeleted = sensorRepository.save(sensor);
-
         return sensorDeleted != null ? SensorDataAdapter.toDTO(sensorDeleted) : new SensorDTO();
     }
 }
