@@ -44,6 +44,10 @@ public class UserServiceImp implements UserService {
         }
 
         Company company = authenticatedService.getAuthenticatedCompany();
+        if (company == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No authenticated company found.");
+        }
+
         return userRepository.findByCompany(company).stream()
                 .map(UserDataAdapter::toDTO)
                 .collect(Collectors.toList());
@@ -52,13 +56,19 @@ public class UserServiceImp implements UserService {
     @Override
     public UserDTO findById(Long id) {
         if (authenticatedService.isRootUser()) {
-            User user = userRepository.findById(id).orElse(null);
-            return user != null ? UserDataAdapter.toDTO(user) : new UserDTO();
+            return userRepository.findById(id)
+                    .map(UserDataAdapter::toDTO)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User ID not found."));
         }
 
         Company company = authenticatedService.getAuthenticatedCompany();
-        User user = userRepository.findByIdAndCompany(id, company).orElse(null);
-        return user != null ? UserDataAdapter.toDTO(user) : new UserDTO();
+        if (company == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No authenticated company found.");
+        }
+
+        return userRepository.findByIdAndCompany(id, company)
+                .map(UserDataAdapter::toDTO)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found in your company."));
     }
 
     @Override
@@ -66,29 +76,32 @@ public class UserServiceImp implements UserService {
         Company company;
 
         if (authenticatedService.isRootUser()) {
-            company = companyRepository.findById(userDTO.getCompanyId()).orElse(null);
+            company = companyRepository.findById(userDTO.getCompanyId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Company not found."));
         } else {
             company = authenticatedService.getAuthenticatedCompany();
+            if (company == null) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No authenticated company found.");
+            }
         }
-
-        if (company == null) return new UserDTO();
 
         User user = UserDataAdapter.toEntity(userDTO);
         user.setCompany(company);
         user.setUserStatus(true);
         user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
 
-        return UserDataAdapter.toDTO(userRepository.save(user));
+        User saved = userRepository.save(user);
+        return UserDataAdapter.toDTO(saved);
     }
 
     @Override
     public UserDTO update(UserDTO userDto) {
-        User userToUpdate = userRepository.findById(userDto.getId()).orElse(null);
-        if (userToUpdate == null) return new UserDTO();
+        User userToUpdate = userRepository.findById(userDto.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found."));
 
         if (!authenticatedService.isRootUser() &&
                 !userToUpdate.getCompany().getId().equals(authenticatedService.getUserCompanyId())) {
-            return new UserDTO();
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied to update this user.");
         }
 
         userToUpdate.setFirstName(userDto.getFirstName() != null && !userDto.getFirstName().isEmpty() ? userDto.getFirstName() : userToUpdate.getFirstName());
@@ -104,11 +117,12 @@ public class UserServiceImp implements UserService {
         return UserDataAdapter.toDTO(userRepository.save(userToUpdate));
     }
 
+
     @Override
     @Transactional
     public UserDTO deleteById(Long id) {
-        User userToDelete = userRepository.findById(id).orElse(null);
-        if (userToDelete == null) return new UserDTO();
+        User userToDelete = userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found."));
 
         if (!authenticatedService.isRootUser()) {
             CustomUserSecurity currentUser = authenticatedService.getAuthenticatedUser();
