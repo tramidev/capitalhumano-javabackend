@@ -10,7 +10,6 @@ import org.springframework.web.server.ResponseStatusException;
 import com.sensormanager.iot.dto.ApiResponseDTO;
 
 @RestController
-@ControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResponseStatusException.class)
