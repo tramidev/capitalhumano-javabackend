@@ -2,7 +2,7 @@ package com.sensormanager.iot.controller;
 
 import com.sensormanager.iot.dto.SensorDataDTO;
 import com.sensormanager.iot.dto.SensorJSONPackageDTO;
-import com.sensormanager.iot.service.SensorDataServiceImp;
+import com.sensormanager.iot.service.SensorDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +16,7 @@ import java.util.List;
 public class SensorDataController {
 
 	@Autowired
-    private SensorDataServiceImp sensorDataService;
+    private SensorDataService sensorDataService;
 
     @GetMapping
     public ResponseEntity<List<SensorDataDTO>> getSensorData(@RequestParam("sensor_id") List<Long> sensorIds,
