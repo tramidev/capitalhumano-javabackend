@@ -104,7 +104,7 @@ classDiagram
     User --> Role
     Sensor --> Company
 ```
-
+---
 ## 🧭 Arquitectura del Sistema: Comunicación entre Cliente, Backend e IoT
 ```mermaid
 graph TD
