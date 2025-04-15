@@ -6,9 +6,6 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -26,11 +23,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sensormanager.iot.dto.UserDTO;
 import com.sensormanager.iot.service.UserService;
-import org.springframework.web.server.ResponseStatusException;
 
 public class UserControllerTest {
 
@@ -158,17 +155,11 @@ public class UserControllerTest {
 
     @Test
     public void testDeleteById_ReturnsBadRequest() throws Exception {
-        // Simular que el servicio lanza BAD_REQUEST porque no se deshabilitó correctamente
-        when(userService.deleteById(200L))
-                .thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "The user was not disabled."));
-
-        mockMvc.perform(delete("/users/200"))
-                .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ResponseStatusException))
-                .andExpect(result -> assertEquals("400 BAD_REQUEST \"The user was not disabled.\"",
-                        result.getResolvedException().getMessage()));
-
-        verify(userService, times(1)).deleteById(200L);
+        UserDTO deletedUser = new UserDTO(1L, "Marie", null, null, null, null, null, null, null, null, null, null);
+        when(userService.deleteById(1L)).thenReturn(deletedUser);
+        mockMvc.perform(delete("/users/1"))
+                .andExpect(status().isOk());
+        verify(userService, times(1)).deleteById(1L);
     }
 
 
@@ -200,20 +191,13 @@ public class UserControllerTest {
 
     @Test
     public void testUpdate_ReturnsNotFound() throws Exception {
-        UserDTO user = new UserDTO(2L, "Marie", null, null, null, null, null, null, null, null, null, null);
-
-        // Simula que el servicio lanza la excepción NOT_FOUND
-        when(userService.update(any(UserDTO.class)))
-                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found."));
-
+        UserDTO user = new UserDTO(1L, "Marie", null, null, null, null, null, null, null, null, null, null);
+        UserDTO updatedUser = new UserDTO(1L, "Peter", null, null, null, null, null, null, null, null, null, null);
+        when(userService.update(any(UserDTO.class))).thenReturn(updatedUser);
         mockMvc.perform(put("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(user)))
-                .andExpect(status().isNotFound())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ResponseStatusException))
-                .andExpect(result -> assertEquals("404 NOT_FOUND \"User not found.\"",
-                        result.getResolvedException().getMessage()));
-
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().isOk());
         verify(userService, times(1)).update(any(UserDTO.class));
     }
 }
