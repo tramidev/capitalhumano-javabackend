@@ -7,12 +7,15 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
@@ -69,13 +72,17 @@ class LocationControllerTest {
 
     @Test
     void testFindById_ReturnsNotFound() {
-        when(locationService.findById(1L)).thenReturn(new LocationDTO());
+        when(locationService.findById(1L)).thenReturn(new LocationDTO()); // sin ID
 
-        ResponseEntity<LocationDTO> response = locationController.findById(1L);
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
+            locationController.findById(1L);
+        });
 
-        assertEquals(404, response.getStatusCodeValue());
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+        assertEquals("The location ID: 1 does not exist.", ex.getReason());
         verify(locationService, times(1)).findById(1L);
     }
+
 
     @Test
     void testCreate_ReturnsCreatedLocation() {
@@ -94,13 +101,18 @@ class LocationControllerTest {
     @Test
     void testCreate_ReturnsBadRequest() {
         LocationDTO requestDTO = new LocationDTO();
-        when(locationService.create(requestDTO)).thenReturn(requestDTO);
 
-        ResponseEntity<LocationDTO> response = locationController.create(requestDTO);
+        when(locationService.create(requestDTO)).thenReturn(new LocationDTO()); // sin ID
 
-        assertEquals(400, response.getStatusCodeValue());
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
+            locationController.create(requestDTO);
+        });
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals("The location was not inserted.", ex.getReason());
         verify(locationService, times(1)).create(requestDTO);
     }
+
 
     @Test
     void testUpdate_ReturnsUpdatedLocation() {
@@ -116,12 +128,16 @@ class LocationControllerTest {
 
     @Test
     void testUpdate_ReturnsBadRequest() {
-        LocationDTO invalidDTO = new LocationDTO();
+        LocationDTO invalidDTO = new LocationDTO(); // sin ID
+
         when(locationService.update(invalidDTO)).thenReturn(invalidDTO);
 
-        ResponseEntity<LocationDTO> response = locationController.update(invalidDTO);
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
+            locationController.update(invalidDTO);
+        });
 
-        assertEquals(400, response.getStatusCodeValue());
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals("The location was not updated.", ex.getReason());
         verify(locationService, times(1)).update(invalidDTO);
     }
 
@@ -139,12 +155,70 @@ class LocationControllerTest {
 
     @Test
     void testDeleteById_ReturnsBadRequest() {
-        LocationDTO emptyDTO = new LocationDTO();
+        LocationDTO emptyDTO = new LocationDTO(); // sin ID
+
         when(locationService.deleteById(1L)).thenReturn(emptyDTO);
 
-        ResponseEntity<LocationDTO> response = locationController.deleteById(1L);
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
+            locationController.deleteById(1L);
+        });
 
-        assertEquals(400, response.getStatusCodeValue());
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals("The location was not disabled.", ex.getReason());
         verify(locationService, times(1)).deleteById(1L);
     }
+
+
+    @Test
+    void testFindById_ReturnsForbidden() {
+        when(locationService.findById(1L)).thenThrow(
+                new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied")
+        );
+
+        try {
+            locationController.findById(1L);
+        } catch (ResponseStatusException ex) {
+            assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
+            assertEquals("Access denied", ex.getReason());
+        }
+
+        verify(locationService, times(1)).findById(1L);
+    }
+
+    @Test
+    void testCreate_InvalidInput_ReturnsBadRequest() {
+        LocationDTO requestDTO = new LocationDTO(); // vacío o inválido
+
+        when(locationService.create(requestDTO)).thenThrow(
+                new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid company ID")
+        );
+
+        try {
+            locationController.create(requestDTO);
+        } catch (ResponseStatusException ex) {
+            assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+            assertEquals("Invalid company ID", ex.getReason());
+        }
+
+        verify(locationService, times(1)).create(requestDTO);
+    }
+
+    @Test
+    void testDeleteById_FailedDisable_ReturnsBadRequest() {
+        when(locationService.deleteById(99L)).thenThrow(
+                new ResponseStatusException(HttpStatus.BAD_REQUEST, "The location was not disabled.")
+        );
+
+        try {
+            locationController.deleteById(99L);
+        } catch (ResponseStatusException ex) {
+            assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+            assertEquals("The location was not disabled.", ex.getReason());
+        }
+
+        verify(locationService, times(1)).deleteById(99L);
+    }
+
+
+
 }
