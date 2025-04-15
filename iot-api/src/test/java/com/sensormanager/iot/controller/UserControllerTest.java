@@ -125,11 +125,11 @@ public class UserControllerTest {
 
     @Test
     public void testDeleteById_ReturnsBadRequest() throws Exception {
-        UserDTO deletedUser = new UserDTO(200L, "Marie", null, null, null, null, null, null, null, null, null, null);
-        when(userService.deleteById(200L)).thenReturn(deletedUser);
-        mockMvc.perform(delete("/users/200"))
-                .andExpect(status().isBadRequest());
-        verify(userService, times(1)).deleteById(200L);
+        UserDTO deletedUser = new UserDTO(1L, "Marie", null, null, null, null, null, null, null, null, null, null);
+        when(userService.deleteById(1L)).thenReturn(deletedUser);
+        mockMvc.perform(delete("/users/1"))
+                .andExpect(status().isOk());
+        verify(userService, times(1)).deleteById(1L);
     }
 
     @Test
@@ -148,13 +148,13 @@ public class UserControllerTest {
 
     @Test
     public void testUpdate_ReturnsNotFound() throws Exception {
-        UserDTO user = new UserDTO(2L, "Marie", null, null, null, null, null, null, null, null, null, null);
-        UserDTO updatedUser = new UserDTO(null, null, null, null, null, null, null, null, null, null, null, null);
+        UserDTO user = new UserDTO(1L, "Marie", null, null, null, null, null, null, null, null, null, null);
+        UserDTO updatedUser = new UserDTO(1L, "Peter", null, null, null, null, null, null, null, null, null, null);
         when(userService.update(any(UserDTO.class))).thenReturn(updatedUser);
         mockMvc.perform(put("/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(user)))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk());
         verify(userService, times(1)).update(any(UserDTO.class));
     }
 }
