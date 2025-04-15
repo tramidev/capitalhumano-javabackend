@@ -1,6 +1,6 @@
-# IoT Sensor Manager API
+# IoT API - Sensor Manager
 
-API REST desarrollada en Java con Spring Boot para gestionar sensores IoT, dispositivos, ubicaciones, empresas y roles. Incluye suscripciones MQTT e integración con PostgreSQL.
+Este proyecto es una API RESTful desarrollada en **Spring Boot** para administrar sensores, usuarios, roles y sus datos asociados en el contexto de Internet de las Cosas (IoT). Además, incluye integración con **Apache Camel + ActiveMQ** y un panel de documentación Swagger.
 
 ## 🚀 Tecnologías
 
@@ -12,6 +12,50 @@ API REST desarrollada en Java con Spring Boot para gestionar sensores IoT, dispo
 - PostgreSQL
 - Maven
 
+## 📁 Estructura del proyecto
+
+```plaintext
+src/main/java/com/sensormanager/iot/
+├── adapter/                # Adaptadores para transformar entidades a DTOs
+├── camel/                  # Rutas de integración con Apache Camel
+├── config/                 # Configuraciones generales (Swagger, Seguridad)
+├── controller/             # Controladores REST
+├── dto/                    # Objetos de transferencia de datos
+├── model/                  # Entidades JPA
+├── repository/             # Repositorios JPA
+├── security/               # Configuración y lógica de seguridad
+├── service/                # Lógica de negocio (interfaces + implementación)
+```
+
+---
+
+## ⚙️ Dependencias principales (`pom.xml`)
+
+- `spring-boot-starter-data-jpa`: Persistencia con JPA/Hibernate.
+- `spring-boot-starter-web`: API REST.
+- `spring-boot-starter-security`: Seguridad basada en roles.
+- `springdoc-openapi-ui`: Generación automática de Swagger UI.
+- `camel-spring-boot-starter`: Apache Camel para integración.
+- `camel-activemq-starter`: Conexión con ActiveMQ.
+- `org.eclipse.paho.client.mqttv3`: Cliente MQTT para IoT.
+
+---
+
+## 🛠 Configuración (`application.properties`)
+
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/iot_db
+spring.datasource.username=postgres
+spring.datasource.password=postgres
+spring.jpa.hibernate.ddl-auto=update
+springdoc.swagger-ui.path=/swagger-ui.html
+```
+
+Incluye también:
+- Configuración para ActiveMQ.
+- Documentación automática vía Swagger.
+
+---
 
 ## 🔌 Endpoints principales
 
@@ -24,13 +68,70 @@ Los endpoints siguen la estructura REST:
 
 Consulta Swagger para más detalles (ver abajo).
 
-## 🔒 Seguridad
+---
 
-Incluye configuración básica de seguridad con Spring Security y autenticación en memoria. En entorno productivo se recomienda reemplazar con JWT o OAuth2.
+## 🔐 Seguridad
 
-## 📡 MQTT
+- Usa **Basic Auth** con roles (`ROOT`, `COMPANY_ADMIN`, `SWAGGER_USER`, etc.).
+- Swagger está protegido y requiere el rol `SWAGGER_USER`.
+- Las rutas `/users`, `/companies`, etc. están protegidas por rol.
 
-Se conecta al broker configurado en `application.properties` para recibir datos de sensores en tiempo real.
+---
+
+## 📘 Diagrama de clases (simplificado)
+
+```mermaid
+classDiagram
+    class User {{
+        Long id
+        String username
+        String password
+        Boolean userStatus
+    }}
+    class Role {{
+        Long id
+        String roleName
+    }}
+    class Company {{
+        Long id
+        String companyName
+    }}
+    class Sensor {{
+        Long id
+        String sensorName
+    }}
+    User --> Company
+    User --> Role
+    Sensor --> Company
+```
+
+## 🧭 Arquitectura del Sistema: Comunicación entre Cliente, Backend e IoT
+```mermaid
+graph TD
+    subgraph Cliente
+        A[Postman / Frontend] -->|Solicitud HTTP| B[Spring Boot API]
+    end
+
+    subgraph Backend
+        B -->|Validación y lógica de negocio| C[Controladores]
+        C -->|Invoca servicios| D[Servicios]
+        D -->|Accede a datos| E[Repositorios]
+        E -->|Persistencia| F[(Base de Datos PostgreSQL)]
+    end
+
+    subgraph IoT
+        G[Dispositivos IoT] -->|MQTT| H[Broker MQTT]
+        H -->|Mensajes MQTT| I[MqttSubscriber]
+        I -->|Llama a servicio| D
+    end
+```
+
+## ▶️ Cómo ejecutar
+
+```bash
+mvn clean install
+mvn spring-boot:run
+```
 
 ## 🔍 Documentación API (Swagger)
 
