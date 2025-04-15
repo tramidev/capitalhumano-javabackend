@@ -14,6 +14,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
@@ -81,6 +82,24 @@ class SensorControllerTest {
     }
 
     @Test
+    void testFindById_WhenAccessIsDenied() {
+        Long sensorId = 1L;
+
+        when(sensorService.findById(sensorId))
+                .thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied to sensor."));
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> sensorController.findById(sensorId)
+        );
+
+        assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
+        assertEquals("Access denied to sensor.", exception.getReason());
+        verify(sensorService, times(1)).findById(sensorId);
+    }
+
+
+    @Test
     void testCreate_WhenSensorIsValid() {
         SensorDTO sensor = new SensorDTO(1L, "Sensor1", "Chile", 1L, 2L, 1742854426L, true);
         when(sensorService.create(sensor)).thenReturn(sensor);
@@ -100,6 +119,44 @@ class SensorControllerTest {
         assertThrows(ResponseStatusException.class, () -> sensorController.create(sensor));
         verify(sensorService, times(1)).create(sensor);
     }
+
+    @Test
+    void testCreate_WhenSensorNameIsMissing() {
+        SensorDTO invalidSensor = new SensorDTO();
+        invalidSensor.setSensorName(null); // o vacío
+
+        when(sensorService.create(invalidSensor))
+                .thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Sensor name is required."));
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> sensorController.create(invalidSensor)
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals("Sensor name is required.", exception.getReason());
+        verify(sensorService, times(1)).create(invalidSensor);
+    }
+
+    @Test
+    void testCreate_WhenNoAuthenticatedCompany() {
+        SensorDTO sensorDTO = new SensorDTO();
+        sensorDTO.setSensorName("SensorX");
+
+        when(sensorService.create(sensorDTO))
+                .thenThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No authenticated company found."));
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> sensorController.create(sensorDTO)
+        );
+
+        assertEquals(HttpStatus.UNAUTHORIZED, exception.getStatusCode());
+        assertEquals("No authenticated company found.", exception.getReason());
+        verify(sensorService, times(1)).create(sensorDTO);
+    }
+
+
 
     @Test
     void testUpdate_WhenSensorIsValid() {

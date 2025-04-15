@@ -85,6 +85,7 @@ class LocationControllerTest {
         verify(locationService, times(1)).findById(1L);
     }
 
+
     @Test
     void testCreate_ReturnsInsertedLocation() {
         LocationDTO inputLocation = new LocationDTO(1L, "New Location","Chile","Location Name","1","Location Street",false,1742433289L, 1L);
@@ -109,6 +110,7 @@ class LocationControllerTest {
         assertEquals("The location was not inserted.", exception.getReason());
         verify(locationService, times(1)).create(inputLocation);
     }
+
 
     @Test
     void testUpdate_ReturnsUpdatedLocation() {

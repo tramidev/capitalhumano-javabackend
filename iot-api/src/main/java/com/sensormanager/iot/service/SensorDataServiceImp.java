@@ -7,12 +7,15 @@ import com.sensormanager.iot.model.Sensor;
 import com.sensormanager.iot.model.SensorData;
 import com.sensormanager.iot.repository.SensorDataRepository;
 import com.sensormanager.iot.repository.SensorRepository;
+import com.sensormanager.iot.security.AuthenticatedService;
 import com.sensormanager.iot.security.CustomUserSecurity;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,6 +29,9 @@ public class SensorDataServiceImp implements SensorDataService {
     @Autowired
     private SensorRepository sensorRepository;
 
+    @Autowired
+    private AuthenticatedService authenticatedService;
+
     public List<SensorDataDTO> getAllSensorData() {
         return sensorDataRepository.findAll().stream()
                 .map(SensorDataDataAdapter::toDTO)
@@ -35,11 +41,15 @@ public class SensorDataServiceImp implements SensorDataService {
     public SensorDataDTO getSensorDataById(Long id) {
         return sensorDataRepository.findById(id)
                 .map(SensorDataDataAdapter::toDTO)
-                .orElse(null);
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sensor data not found."));
     }
 
     @Transactional
     public SensorDataDTO createSensorData(SensorDataDTO sensorDataDTO) {
+        if (sensorDataDTO.getIdSensor() == null || sensorDataDTO.getMetric() == null || sensorDataDTO.getRecord() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Sensor data is incomplete.");
+        }
+
         SensorData sensorData = SensorDataDataAdapter.toEntity(sensorDataDTO);
         SensorData savedSensorData = sensorDataRepository.save(sensorData);
         return SensorDataDataAdapter.toDTO(savedSensorData);
@@ -47,12 +57,17 @@ public class SensorDataServiceImp implements SensorDataService {
 
     @Transactional
     public List<SensorDataDTO> createSensorData(SensorJSONPackageDTO sensorJSONPackageDTO) {
-        List<SensorDataDTO> sensorDatas = new ArrayList<>();
+        if (sensorJSONPackageDTO == null || sensorJSONPackageDTO.getApiKey() == null || sensorJSONPackageDTO.getJsonData() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid sensor data package.");
+        }
 
         Optional<Sensor> sensor = sensorRepository.findSensorBySensorApiKey(sensorJSONPackageDTO.getApiKey());
-        if (sensor.isEmpty()) return Collections.emptyList();
+        if (sensor.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Sensor with given API key not found.");
+        }
 
         Long sensorID = sensor.get().getId();
+        List<SensorDataDTO> sensorDatas = new ArrayList<>();
 
         for (Map<String, String> obj : sensorJSONPackageDTO.getJsonData()) {
             String datetimeStr = obj.remove("datetime");
@@ -60,7 +75,6 @@ public class SensorDataServiceImp implements SensorDataService {
 
             try {
                 Long createdAt = Long.parseLong(datetimeStr);
-
                 for (Map.Entry<String, String> entry : obj.entrySet()) {
                     SensorDataDTO sensorDataDTO = new SensorDataDTO();
                     sensorDataDTO.setIdSensor(sensorID);
@@ -70,11 +84,17 @@ public class SensorDataServiceImp implements SensorDataService {
                     sensorDatas.add(sensorDataDTO);
                 }
             } catch (NumberFormatException e) {
-
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid datetime format in sensor data.");
             }
         }
 
-        return sensorDatas.stream().map(this::createSensorData).collect(Collectors.toList());
+        if (sensorDatas.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No valid sensor data found.");
+        }
+
+        return sensorDatas.stream()
+                .map(this::createSensorData)
+                .collect(Collectors.toList());
     }
 
     @Transactional
@@ -100,41 +120,43 @@ public class SensorDataServiceImp implements SensorDataService {
 
             SensorData updatedEntity = sensorDataRepository.save(existingSensorData);
             return SensorDataDataAdapter.toDTO(updatedEntity);
-        }).orElse(null);
+        }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sensor data to update not found."));
     }
+
 
     @Transactional
     public void deleteSensorData(Long id) {
+        if (!sensorDataRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Sensor data to delete not found.");
+        }
         sensorDataRepository.deleteById(id);
     }
 
     public List<SensorDataDTO> getSensorData(List<Long> sensorIds, Long from, Long to) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated()) {
-            CustomUserSecurity userAuth = (CustomUserSecurity) authentication.getPrincipal();
+        CustomUserSecurity userAuth = authenticatedService.getAuthenticatedUser();
 
-            if (userAuth.hasRole("ROOT")) {
-                return sensorDataRepository.findBySensorIdInAndRecordCreatedAtBetween(sensorIds, from, to)
-                        .stream()
-                        .map(SensorDataDataAdapter::toDTO)
-                        .collect(Collectors.toList());
-            } else {
-                List<Long> validSensorIds = sensorRepository
-                        .findByIdInAndSensorCompanyId(sensorIds, userAuth.getCompany().getId())
-                        .stream()
-                        .map(Sensor::getId)
-                        .toList();
+        if (authenticatedService.isRootUser()) {
+            return sensorDataRepository.findBySensorIdInAndRecordCreatedAtBetween(sensorIds, from, to)
+                    .stream()
+                    .map(SensorDataDataAdapter::toDTO)
+                    .collect(Collectors.toList());
+        } else {
+            Long companyId = authenticatedService.getUserCompanyId();
 
-                if (validSensorIds.isEmpty()) {
-                    return Collections.emptyList();
-                }
+            List<Long> validSensorIds = sensorRepository
+                    .findByIdInAndSensorCompanyId(sensorIds, companyId)
+                    .stream()
+                    .map(Sensor::getId)
+                    .toList();
 
-                return sensorDataRepository.findBySensorIdInAndRecordCreatedAtBetween(validSensorIds, from, to)
-                        .stream()
-                        .map(SensorDataDataAdapter::toDTO)
-                        .collect(Collectors.toList());
+            if (validSensorIds.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to access these sensors.");
             }
+
+            return sensorDataRepository.findBySensorIdInAndRecordCreatedAtBetween(validSensorIds, from, to)
+                    .stream()
+                    .map(SensorDataDataAdapter::toDTO)
+                    .collect(Collectors.toList());
         }
-        return Collections.emptyList();
     }
 }

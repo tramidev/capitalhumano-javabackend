@@ -9,7 +9,9 @@ import com.sensormanager.iot.repository.SensorRepository;
 import com.sensormanager.iot.security.AuthenticatedService;
 import com.sensormanager.iot.utils.GenerateApiKey;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.List;
@@ -41,13 +43,12 @@ public class SensorServiceImp implements SensorService {
 
     @Override
     public SensorDTO findById(Long id) {
-        Optional<Sensor> optSensor = sensorRepository.findByIdAndSensorStatusTrue(id);
-        if (optSensor.isEmpty()) return new SensorDTO();
+        Sensor sensor = sensorRepository.findByIdAndSensorStatusTrue(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sensor not found."));
 
-        Sensor sensor = optSensor.get();
-        if (!authenticatedService.isRootUser()
-                && !sensor.getSensorCompany().getId().equals(authenticatedService.getUserCompanyId())) {
-            return new SensorDTO();
+        if (!authenticatedService.isRootUser() &&
+                !sensor.getSensorCompany().getId().equals(authenticatedService.getUserCompanyId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied to sensor.");
         }
 
         return SensorDataAdapter.toDTO(sensor);
@@ -55,34 +56,42 @@ public class SensorServiceImp implements SensorService {
 
     @Override
     public List<SensorDTO> findByCompany(Long companyId) {
-        Optional<Company> optCompany = companyRepository.findById(companyId);
-        if (optCompany.isEmpty()) return Collections.emptyList();
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found."));
 
-        Company company = optCompany.get();
-        if (!authenticatedService.isRootUser()
-                && !company.getId().equals(authenticatedService.getUserCompanyId())) {
-            return Collections.emptyList();
+        if (!authenticatedService.isRootUser() &&
+                !company.getId().equals(authenticatedService.getUserCompanyId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied to company sensors.");
         }
 
-        return sensorRepository.findBySensorCompanyAndSensorStatusTrue(company)
-                .stream()
+        List<Sensor> sensors = sensorRepository.findBySensorCompanyAndSensorStatusTrue(company);
+
+        if (sensors.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No sensors found for the given company.");
+        }
+
+        return sensors.stream()
                 .map(SensorDataAdapter::toDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
     public SensorDTO create(SensorDTO sensorDTO) {
+        if (sensorDTO.getSensorName() == null || sensorDTO.getSensorName().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Sensor name is required.");
+        }
 
         if (sensorRepository.existsBySensorName(sensorDTO.getSensorName())) {
-            return new SensorDTO();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Sensor name already exists.");
         }
 
         Company company = authenticatedService.isRootUser()
-                ? companyRepository.findById(sensorDTO.getSensorCompany()).orElse(null)
+                ? companyRepository.findById(sensorDTO.getSensorCompany())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Company not found."))
                 : authenticatedService.getAuthenticatedCompany();
 
         if (company == null) {
-            return new SensorDTO();
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No authenticated company found.");
         }
 
         sensorDTO.setSensorApiKey(GenerateApiKey.generate(sensorDTO.getSensorName()));
@@ -94,50 +103,43 @@ public class SensorServiceImp implements SensorService {
 
         Sensor sensorSaved = sensorRepository.save(sensor);
 
-        if (sensorSaved == null) {
-            return new SensorDTO();
-        }
-
         return SensorDataAdapter.toDTO(sensorSaved);
     }
 
     @Override
     public SensorDTO update(SensorDTO sensorDTO) {
-        Optional<Sensor> optSensor = sensorRepository.findById(sensorDTO.getId());
-        if (optSensor.isEmpty()) return new SensorDTO();
+        Sensor sensor = sensorRepository.findById(sensorDTO.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sensor not found."));
 
-        Sensor sensor = optSensor.get();
-
-        if (!authenticatedService.isRootUser()
-                && !sensor.getSensorCompany().getId().equals(authenticatedService.getUserCompanyId())) {
-            return new SensorDTO();
+        if (!authenticatedService.isRootUser() &&
+                !sensor.getSensorCompany().getId().equals(authenticatedService.getUserCompanyId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied to sensor.");
         }
 
-        sensor.setSensorName(
-                sensorDTO.getSensorName() != null && !sensorDTO.getSensorName().isEmpty()
-                        ? sensorDTO.getSensorName()
-                        : sensor.getSensorName()
-        );
-        sensor.setSensorStatus(sensorDTO.getSensorStatus());
+        if (sensorDTO.getSensorName() != null && !sensorDTO.getSensorName().isEmpty()) {
+            sensor.setSensorName(sensorDTO.getSensorName());
+        }
 
-        Sensor sensorUpdated = sensorRepository.save(sensor);
-        return sensorUpdated != null ? SensorDataAdapter.toDTO(sensorUpdated) : new SensorDTO();
+        if (sensorDTO.getSensorStatus() != null) {
+            sensor.setSensorStatus(sensorDTO.getSensorStatus());
+        }
+
+        Sensor updated = sensorRepository.save(sensor);
+        return SensorDataAdapter.toDTO(updated);
     }
 
     @Override
     public SensorDTO deleteById(Long id) {
-        Optional<Sensor> optSensor = sensorRepository.findById(id);
-        if (optSensor.isEmpty()) return new SensorDTO();
+        Sensor sensor = sensorRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sensor not found."));
 
-        Sensor sensor = optSensor.get();
-
-        if (!authenticatedService.isRootUser()
-                && !sensor.getSensorCompany().getId().equals(authenticatedService.getUserCompanyId())) {
-            return new SensorDTO();
+        if (!authenticatedService.isRootUser() &&
+                !sensor.getSensorCompany().getId().equals(authenticatedService.getUserCompanyId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied to sensor.");
         }
 
         sensor.setSensorStatus(false);
-        Sensor sensorDeleted = sensorRepository.save(sensor);
-        return sensorDeleted != null ? SensorDataAdapter.toDTO(sensorDeleted) : new SensorDTO();
+        Sensor deleted = sensorRepository.save(sensor);
+        return SensorDataAdapter.toDTO(deleted);
     }
 }

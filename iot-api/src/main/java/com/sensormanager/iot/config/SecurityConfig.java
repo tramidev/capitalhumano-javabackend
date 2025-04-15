@@ -1,7 +1,5 @@
 package com.sensormanager.iot.config;
 
-
-import com.sensormanager.iot.service.UserDetailsServiceImp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,37 +21,44 @@ import com.sensormanager.iot.security.CustomAuthenticationEntryPoint;
 
 @Configuration
 public class SecurityConfig {
-	
-	@Autowired
+
+    @Autowired
     private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
-	
-	@Autowired
+
+    @Autowired
     private CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-    	httpSecurity
-    		.csrf(csrf -> csrf.disable())
-        	.httpBasic(Customizer.withDefaults())
-        	.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        	.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer.authenticationEntryPoint(customAuthenticationEntryPoint))
-        	.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer.accessDeniedHandler(customAccessDeniedHandler))
-        	.authorizeHttpRequests(auth -> {
-            	auth.requestMatchers("/companies/**").hasAnyAuthority("ROOT");
-            	auth.requestMatchers("/users/**").hasAnyAuthority("ROOT","COMPANY_ADMIN");
-            	auth.requestMatchers("/locations/**").hasAnyAuthority("ROOT","COMPANY_ADMIN");
-            	auth.requestMatchers("/sensors/**").hasAnyAuthority("ROOT","COMPANY_ADMIN");
-            	auth.requestMatchers("/user-role/**").hasAnyAuthority("ROOT","COMPANY_ADMIN");
-            	auth.requestMatchers(HttpMethod.GET,"/api/v1/sensordata/**").hasAnyAuthority("ROOT","COMPANY_ADMIN","COMPANY_USER");
-            	auth.requestMatchers(HttpMethod.POST,"/api/v1/sensordata/**").permitAll();
-            	auth.anyRequest().denyAll();
-            });
-        //REGISTRA EXPLÍCITAMENTE EL AUTHPROVIDER
-        httpSecurity.authenticationProvider(authenticationProvider(userDetailsService()));
+        httpSecurity
+                .csrf(csrf -> csrf.disable()) // aún funciona en Spring Boot 3.4.3
+                .httpBasic(Customizer.withDefaults())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(ex -> {
+                    ex.authenticationEntryPoint(customAuthenticationEntryPoint);
+                    ex.accessDeniedHandler(customAccessDeniedHandler);
+                })
+                .authorizeHttpRequests(auth -> {
+                    auth.requestMatchers(
+                            "/swagger-ui/**",
+                            "/swagger-ui.html",
+                            "/v3/api-docs/**",
+                            "/swagger-resources/**",
+                            "/webjars/**"
+                    ).permitAll();
+                    auth.requestMatchers("/companies/**").hasAnyAuthority("ROOT");
+                    auth.requestMatchers("/users/**").hasAnyAuthority("ROOT", "COMPANY_ADMIN");
+                    auth.requestMatchers("/locations/**").hasAnyAuthority("ROOT", "COMPANY_ADMIN");
+                    auth.requestMatchers("/sensors/**").hasAnyAuthority("ROOT", "COMPANY_ADMIN");
+                    auth.requestMatchers("/user-role/**").hasAnyAuthority("ROOT", "COMPANY_ADMIN");
+                    auth.requestMatchers(HttpMethod.GET, "/api/v1/sensordata/**").hasAnyAuthority("ROOT", "COMPANY_ADMIN", "COMPANY_USER");
+                    auth.requestMatchers(HttpMethod.POST, "/api/v1/sensordata/**").permitAll();
+                    auth.anyRequest().denyAll();
+                });
 
         return httpSecurity.build();
     }
-    
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
@@ -71,10 +76,4 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
-    @Bean
-    public UserDetailsService userDetailsService() {
-        return new UserDetailsServiceImp();
-    }
-    
 }
