@@ -82,24 +82,25 @@ Consulta Swagger para más detalles (ver abajo).
 
 ```mermaid
 classDiagram
-    class User {{
+    class User {
         Long id
         String username
         String password
         Boolean userStatus
-    }}
-    class Role {{
+    }
+    class Role {
         Long id
         String roleName
-    }}
-    class Company {{
+    }
+    class Company {
         Long id
         String companyName
-    }}
-    class Sensor {{
+    }
+    class Sensor {
         Long id
         String sensorName
-    }}
+    }
+
     User --> Company
     User --> Role
     Sensor --> Company
