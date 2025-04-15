@@ -39,7 +39,6 @@ public class SecurityConfig {
                     ex.accessDeniedHandler(customAccessDeniedHandler);
                 })
                 .authorizeHttpRequests(auth -> {
-                    // 🚨 Swagger libre:
                     auth.requestMatchers(
                             "/swagger-ui/**",
                             "/swagger-ui.html",
@@ -47,7 +46,6 @@ public class SecurityConfig {
                             "/swagger-resources/**",
                             "/webjars/**"
                     ).permitAll();
-                    // 👇 tus reglas de negocio:
                     auth.requestMatchers("/companies/**").hasAnyAuthority("ROOT");
                     auth.requestMatchers("/users/**").hasAnyAuthority("ROOT", "COMPANY_ADMIN");
                     auth.requestMatchers("/locations/**").hasAnyAuthority("ROOT", "COMPANY_ADMIN");
