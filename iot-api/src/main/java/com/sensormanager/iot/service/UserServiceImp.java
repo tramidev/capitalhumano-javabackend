@@ -1,8 +1,12 @@
+// ✅ UserServiceImp.java
 package com.sensormanager.iot.service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.sensormanager.iot.dto.UserRoleDTO;
+import com.sensormanager.iot.model.Role;
+import com.sensormanager.iot.repository.RoleRepository;
 import com.sensormanager.iot.security.AuthenticatedService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,6 +32,12 @@ public class UserServiceImp implements UserService {
 
     @Autowired
     private CompanyRepository companyRepository;
+
+    @Autowired
+    private UserRoleService userRoleService;
+
+    @Autowired
+    private RoleRepository roleRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -73,6 +83,9 @@ public class UserServiceImp implements UserService {
 
     @Override
     public UserDTO create(UserDTO userDTO) {
+        System.out.println("⚡️ Entrando a UserServiceImp.create() con: " + userDTO.getUsername());
+        System.out.println("👉 [UserServiceImp] Authenticated as ROOT? " + authenticatedService.isRootUser());
+
         Company company;
 
         if (authenticatedService.isRootUser()) {
@@ -85,12 +98,39 @@ public class UserServiceImp implements UserService {
             }
         }
 
+        if (userRepository.existsByUsername(userDTO.getUsername())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists.");
+        }
+
         User user = UserDataAdapter.toEntity(userDTO);
         user.setCompany(company);
         user.setUserStatus(true);
         user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
 
         User saved = userRepository.save(user);
+
+        String roleNameToAssign;
+
+        if (authenticatedService.isRootUser()) {
+            if (userDTO.getRoleName() == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Role is required for user creation.");
+            }
+            roleNameToAssign = userDTO.getRoleName();
+        } else {
+            roleNameToAssign = "COMPANY_USER";
+        }
+
+        Role role = roleRepository.findByRoleName(roleNameToAssign);
+        if (role == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Role not found: " + roleNameToAssign);
+        }
+
+        UserRoleDTO userRoleDTO = new UserRoleDTO();
+        userRoleDTO.setUserId(saved.getId().intValue());
+        userRoleDTO.setRoleId(role.getId().intValue());
+
+        userRoleService.create(userRoleDTO);
+
         return UserDataAdapter.toDTO(saved);
     }
 
@@ -116,7 +156,6 @@ public class UserServiceImp implements UserService {
 
         return UserDataAdapter.toDTO(userRepository.save(userToUpdate));
     }
-
 
     @Override
     @Transactional

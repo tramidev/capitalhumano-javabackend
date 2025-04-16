@@ -40,12 +40,4 @@ public class AuthenticatedService {
         CustomUserSecurity user = getAuthenticatedUser();
         return user != null ? user.getCompany() : null;
     }
-
-
-
-
-
-
-
-
 }
