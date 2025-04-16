@@ -31,7 +31,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
-                .csrf(csrf -> csrf.disable()) // aún funciona en Spring Boot 3.4.3
+                .csrf(csrf -> csrf.disable())
                 .httpBasic(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> {
@@ -46,11 +46,14 @@ public class SecurityConfig {
                             "/swagger-resources/**",
                             "/webjars/**"
                     ).permitAll();
+
+                    auth.requestMatchers(HttpMethod.POST, "/users").hasAuthority("ROOT");
+                    auth.requestMatchers(HttpMethod.PUT, "/users/**").hasAuthority("ROOT");
                     auth.requestMatchers("/companies/**").hasAnyAuthority("ROOT");
                     auth.requestMatchers("/users/**").hasAnyAuthority("ROOT", "COMPANY_ADMIN");
                     auth.requestMatchers("/locations/**").hasAnyAuthority("ROOT", "COMPANY_ADMIN");
                     auth.requestMatchers("/sensors/**").hasAnyAuthority("ROOT", "COMPANY_ADMIN");
-                    auth.requestMatchers("/user-role/**").hasAnyAuthority("ROOT", "COMPANY_ADMIN");
+                    auth.requestMatchers("/user-role/**").hasAnyAuthority("ROOT");
                     auth.requestMatchers(HttpMethod.GET, "/api/v1/sensordata/**").hasAnyAuthority("ROOT", "COMPANY_ADMIN", "COMPANY_USER");
                     auth.requestMatchers(HttpMethod.POST, "/api/v1/sensordata/**").permitAll();
                     auth.anyRequest().denyAll();
