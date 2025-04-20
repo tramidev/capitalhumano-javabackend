@@ -110,20 +110,30 @@ classDiagram
 ```mermaid
 graph TD
     subgraph Cliente
-        A[Postman / Frontend] -->|Solicitud HTTP| B[Spring Boot API]
+        A[Postman / Frontend] 
     end
 
     subgraph Backend
+        A -->|Request HTTP| B[Spring Boot API]
         B -->|Validación y lógica de negocio| C[Controladores]
         C -->|Invoca servicios| D[Servicios]
         D -->|Accede a datos| E[Repositorios]
         E -->|Persistencia| F[(Base de Datos PostgreSQL)]
+        K -->|Envia a| D
+    end
+    
+    subgraph Mensajeria
+        J -->|Consumido| K[Apache Camel]
     end
 
-    subgraph IoT
-        G[Dispositivos IoT] -->|MQTT| H[Broker MQTT]
-        H -->|Mensajes MQTT| I[MqttSubscriber]
-        I -->|Llama a servicio| D
+    subgraph IoT Zigbee
+        G[Dispositivos IoT] -->|MQTT| H[Broker Zigbee]
+        H -->|Mensajes MQTT| I[MqttProducer]
+        I --> |Mensajes MQTT| J[ActiveMQ]
+    end
+
+    subgraph IoT ESP32
+        IH[Dispositivos IoT] --> |Request HTTP| B
     end
 ```
 
