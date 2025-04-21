@@ -144,10 +144,6 @@ mvn clean install
 mvn spring-boot:run
 ```
 
-## 🔍 Documentación API (Swagger)
-
-Disponible en `http://localhost:8080/swagger-ui/index.html`
-
 ## ⚙️ Configuración de Base de Datos
 
 Edita `src/main/resources/application.properties` para definir tus credenciales y host:
